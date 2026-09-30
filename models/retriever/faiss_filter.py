@@ -1,3 +1,4 @@
+# models/retriever/faiss_filter.py
 import json
 import os
 import time
@@ -460,6 +461,8 @@ class DualFAISSRetriever:
             
             if embeddings:
                 embeddings_tensor = torch.stack(embeddings)
+                # Move the newly stacked tensor to match the device of query_tensor
+                embeddings_tensor = embeddings_tensor.to(query_tensor.device)
                 similarities = F.cosine_similarity(query_tensor.unsqueeze(0), embeddings_tensor, dim=1)
                 
                 for i, node in enumerate(nodes_with_embedding):
@@ -512,6 +515,8 @@ class DualFAISSRetriever:
         scores = {}
         if node_embeddings:
             embeddings_tensor = torch.stack(node_embeddings)
+            # Move the newly stacked tensor to match the device of query_tensor
+            embeddings_tensor = embeddings_tensor.to(query_tensor.device)
             similarities = F.cosine_similarity(query_tensor.unsqueeze(0), embeddings_tensor, dim=1)
             
             for i, node in enumerate(node_names):

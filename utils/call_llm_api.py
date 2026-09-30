@@ -57,10 +57,20 @@ class LLMCompletionCall:
     def _clean_llm_content(self, text: str) -> str:
         if not isinstance(text, str):
             return ""
+
+                
+        # 1. Remove common thinking tags (e.g., <think>, <reasoning>, <analysis>)
+        text = re.sub(r'<think(?:ing)?>.*?</think(?:ing)?>', '', text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r'<reasoning>.*?</reasoning>', '', text, flags=re.DOTALL | re.IGNORECASE)
+        
+        # 2. Remove special tokens and zero-width characters
+        text = re.sub(r"[\u200B-\u200D\uFEFF]", "", text)
+        
+        # 3. Existing cleaning: normalize newlines, strip code fences, etc.
         t = text.replace("\r\n", "\n").replace("\r", "\n").strip()
-        t = re.sub(r"[\u200B-\u200D\uFEFF]", "", t)
         fence_re = re.compile(r"^\s*```(?:\s*\w+)?\s*\n(?P<body>[\s\S]*?)\n\s*```\s*$", re.MULTILINE)
         m = fence_re.match(t)
+        
         if m:
             t = m.group("body").strip()
         else:

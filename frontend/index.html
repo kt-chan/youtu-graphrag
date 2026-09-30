@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,12 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    
+
     <!-- CDN Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.2/dist/axios.min.js"></script>
-    
+
     <style>
-        
         * {
             margin: 0;
             padding: 0;
@@ -22,7 +22,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: 
+            background:
                 linear-gradient(135deg, #a8c8ec 0%, #e6f3ff 25%, #e6f3ff 75%, #b8d4f0 100%),
                 linear-gradient(45deg, #4a90e2 0%, #6b73ff 50%, #9bb5ff 100%);
             background-blend-mode: multiply;
@@ -40,7 +40,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(circle at 20% 80%, rgba(168, 200, 236, 0.3) 0%, transparent 60%),
                 radial-gradient(circle at 80% 20%, rgba(182, 212, 240, 0.3) 0%, transparent 60%),
                 radial-gradient(circle at 40% 40%, rgba(230, 243, 255, 0.2) 0%, transparent 60%);
@@ -49,18 +49,45 @@
         }
 
         @keyframes backgroundFloat {
-            0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
-            25% { transform: translate(20px, -15px) rotate(1deg) scale(1.02); }
-            50% { transform: translate(-15px, 20px) rotate(-0.5deg) scale(0.98); }
-            75% { transform: translate(15px, 10px) rotate(0.5deg) scale(1.01); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+
+            25% {
+                transform: translate(20px, -15px) rotate(1deg) scale(1.02);
+            }
+
+            50% {
+                transform: translate(-15px, 20px) rotate(-0.5deg) scale(0.98);
+            }
+
+            75% {
+                transform: translate(15px, 10px) rotate(0.5deg) scale(1.01);
+            }
         }
 
         @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            25% { background-position: 100% 50%; }
-            50% { background-position: 50% 100%; }
-            75% { background-position: 50% 0%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            25% {
+                background-position: 100% 50%;
+            }
+
+            50% {
+                background-position: 50% 100%;
+            }
+
+            75% {
+                background-position: 50% 0%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .container {
@@ -77,7 +104,7 @@
             border-radius: 25px;
             margin-bottom: 30px;
             border: 2px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 
+            box-shadow:
                 0 15px 45px rgba(102, 126, 234, 0.15),
                 0 5px 15px rgba(245, 87, 108, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -97,9 +124,17 @@
         }
 
         @keyframes headerShine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-            100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+
+            50% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
         }
 
         .logo-container {
@@ -126,8 +161,15 @@
         }
 
         @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(2deg); }
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-8px) rotate(2deg);
+            }
         }
 
         .logo {
@@ -139,8 +181,15 @@
         }
 
         @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
         .subtitle {
@@ -162,22 +211,24 @@
             gap: 8px;
             z-index: 3;
         }
+
         .lang-btn {
             padding: 6px 10px;
             border-radius: 999px;
             border: 1px solid rgba(255, 255, 255, 0.35);
-            background: rgba(0,0,0,0.2);
-            color: rgba(255,255,255,0.9);
+            background: rgba(0, 0, 0, 0.2);
+            color: rgba(255, 255, 255, 0.9);
             font-size: 12px;
             cursor: pointer;
             backdrop-filter: blur(6px);
         }
+
         .lang-btn.active {
-            background: linear-gradient(135deg, rgba(107,115,255,0.85), rgba(155,181,255,0.85));
-            border-color: rgba(255,255,255,0.6);
+            background: linear-gradient(135deg, rgba(107, 115, 255, 0.85), rgba(155, 181, 255, 0.85));
+            border-color: rgba(255, 255, 255, 0.6);
             color: #0b1430;
             font-weight: 700;
-            box-shadow: 0 4px 12px rgba(107,115,255,0.35);
+            box-shadow: 0 4px 12px rgba(107, 115, 255, 0.35);
         }
 
         .card {
@@ -187,7 +238,7 @@
             padding: 30px;
             margin-bottom: 25px;
             border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 
+            box-shadow:
                 0 8px 32px rgba(0, 0, 0, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.4);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -208,7 +259,7 @@
 
         .card:hover {
             transform: translateY(-8px) scale(1.02);
-            box-shadow: 
+            box-shadow:
                 0 20px 40px rgba(0, 0, 0, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.4);
             border-color: rgba(255, 255, 255, 0.4);
@@ -269,7 +320,7 @@
         .tab.active {
             background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(78, 205, 196, 0.3) 50%, rgba(69, 183, 209, 0.3) 100%);
             color: rgba(255, 255, 255, 0.95);
-            box-shadow: 
+            box-shadow:
                 0 4px 20px rgba(0, 0, 0, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -325,7 +376,7 @@
             border-color: rgba(255, 182, 193, 0.8);
             background: rgba(255, 182, 193, 0.1);
             transform: translateY(-4px);
-            box-shadow: 
+            box-shadow:
                 0 10px 30px rgba(0, 0, 0, 0.2),
                 0 0 20px rgba(255, 182, 193, 0.3);
         }
@@ -334,7 +385,7 @@
             border-color: rgba(78, 205, 196, 0.8);
             background: rgba(78, 205, 196, 0.15);
             transform: scale(1.03) translateY(-4px);
-            box-shadow: 
+            box-shadow:
                 0 15px 40px rgba(0, 0, 0, 0.3),
                 0 0 30px rgba(78, 205, 196, 0.4);
         }
@@ -352,8 +403,15 @@
         }
 
         @keyframes iconPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         .btn {
@@ -414,13 +472,20 @@
         }
 
         @keyframes gradientMove {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
         .btn:hover {
             transform: translateY(-4px) scale(1.05);
-            box-shadow: 
+            box-shadow:
                 0 8px 25px rgba(0, 0, 0, 0.3),
                 0 0 20px rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.5);
@@ -475,14 +540,17 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        .input, .textarea, .select {
+        .input,
+        .textarea,
+        .select {
             width: 100%;
             padding: 16px 20px;
             border: 2px solid rgba(255, 255, 255, 0.18);
             border-radius: 15px;
-            background: rgba(25, 25, 25, 0.65); /* darker background */
+            background: rgba(25, 25, 25, 0.65);
+            /* darker background */
             backdrop-filter: blur(4px);
-            color: rgba(255,255,255,0.92);
+            color: rgba(255, 255, 255, 0.92);
             font-size: 15px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -491,7 +559,9 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
 
-        .input:focus, .textarea:focus, .select:focus {
+        .input:focus,
+        .textarea:focus,
+        .select:focus {
             outline: none;
             border-color: rgba(120, 200, 255, 0.55);
             background: rgba(35, 35, 35, 0.85);
@@ -503,7 +573,8 @@
             transform: translateY(-2px);
         }
 
-        .input::placeholder, .textarea::placeholder {
+        .input::placeholder,
+        .textarea::placeholder {
             color: rgba(255, 255, 255, 0.6);
             font-style: italic;
         }
@@ -563,6 +634,7 @@
             gap: 16px;
             width: 100%;
         }
+
         .quick-actions .btn {
             flex: 1 1 0;
             display: flex;
@@ -572,22 +644,28 @@
             font-size: 14px;
             min-height: 48px;
         }
+
         @media (max-width: 900px) {
-            .quick-actions { flex-wrap: wrap; }
-            .quick-actions .btn { flex: 1 1 calc(50% - 16px); }
+            .quick-actions {
+                flex-wrap: wrap;
+            }
+
+            .quick-actions .btn {
+                flex: 1 1 calc(50% - 16px);
+            }
         }
 
         .chart-container {
             height: 500px;
-            background: linear-gradient(140deg, rgba(18,24,36,0.92) 0%, rgba(30,42,60,0.88) 60%, rgba(42,58,82,0.85) 100%);
+            background: linear-gradient(140deg, rgba(18, 24, 36, 0.92) 0%, rgba(30, 42, 60, 0.88) 60%, rgba(42, 58, 82, 0.85) 100%);
             backdrop-filter: blur(6px);
             border-radius: 20px;
             margin: 25px 0;
             border: 2px solid rgba(255, 255, 255, 0.08);
             box-shadow:
-                0 10px 34px -4px rgba(0,0,0,0.55),
-                0 2px 0 rgba(255,255,255,0.08) inset,
-                0 0 22px -6px rgba(107,115,255,0.4);
+                0 10px 34px -4px rgba(0, 0, 0, 0.55),
+                0 2px 0 rgba(255, 255, 255, 0.08) inset,
+                0 0 22px -6px rgba(107, 115, 255, 0.4);
             position: relative;
             overflow: hidden;
         }
@@ -599,29 +677,36 @@
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(90deg, 
-                rgba(79, 172, 254, 0.6), 
-                rgba(102, 126, 234, 0.4), 
-                rgba(118, 75, 162, 0.5), 
-                rgba(156, 39, 176, 0.6));
+            background: linear-gradient(90deg,
+                    rgba(79, 172, 254, 0.6),
+                    rgba(102, 126, 234, 0.4),
+                    rgba(118, 75, 162, 0.5),
+                    rgba(156, 39, 176, 0.6));
             border-radius: 20px;
             z-index: -1;
             animation: borderGlow 12s ease-in-out infinite;
         }
 
         @keyframes borderGlow {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
         }
 
         .retrieval-details {
             /* High contrast container */
-            background: linear-gradient(145deg, rgba(15,22,33,0.92) 0%, rgba(30,42,60,0.88) 100%);
+            background: linear-gradient(145deg, rgba(15, 22, 33, 0.92) 0%, rgba(30, 42, 60, 0.88) 100%);
             border-radius: 14px;
             padding: 24px 26px 20px;
             margin: 28px 0 24px;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 10px 28px -6px rgba(0,0,0,0.55), 0 2px 0 rgba(255,255,255,0.06) inset;
+            box-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.55), 0 2px 0 rgba(255, 255, 255, 0.06) inset;
             position: relative;
             overflow: hidden;
         }
@@ -630,8 +715,8 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 12% 18%, rgba(107,115,255,0.18), transparent 60%),
-                        radial-gradient(circle at 88% 82%, rgba(155,181,255,0.16), transparent 65%);
+            background: radial-gradient(circle at 12% 18%, rgba(107, 115, 255, 0.18), transparent 60%),
+                radial-gradient(circle at 88% 82%, rgba(155, 181, 255, 0.16), transparent 65%);
             pointer-events: none;
             mix-blend-mode: screen;
         }
@@ -674,14 +759,14 @@
 
         .subquestion-item {
             /* Higher-contrast panel for readability */
-            background: linear-gradient(135deg, rgba(18,25,38,0.88) 0%, rgba(34,45,65,0.82) 100%);
+            background: linear-gradient(135deg, rgba(18, 25, 38, 0.88) 0%, rgba(34, 45, 65, 0.82) 100%);
             backdrop-filter: blur(6px);
             border-radius: 10px;
             padding: 16px 18px 14px;
             margin-bottom: 16px;
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-left: 5px solid #6b73ff;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
             position: relative;
             overflow: hidden;
             transition: background 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
@@ -690,17 +775,20 @@
         .subquestion-item::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 15% 20%, rgba(107,115,255,0.20), transparent 60%),
-                        radial-gradient(circle at 85% 80%, rgba(155,181,255,0.18), transparent 65%);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 15% 20%, rgba(107, 115, 255, 0.20), transparent 60%),
+                radial-gradient(circle at 85% 80%, rgba(155, 181, 255, 0.18), transparent 65%);
             opacity: 0.9;
             pointer-events: none;
         }
 
         .subquestion-item:hover {
-            background: linear-gradient(135deg, rgba(25,35,50,0.92) 0%, rgba(46,60,85,0.86) 100%);
+            background: linear-gradient(135deg, rgba(25, 35, 50, 0.92) 0%, rgba(46, 60, 85, 0.86) 100%);
             transform: translateY(-3px);
-            box-shadow: 0 8px 22px rgba(0,0,0,0.55), 0 2px 0 rgba(255,255,255,0.08) inset;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 2px 0 rgba(255, 255, 255, 0.08) inset;
         }
 
         .subquestion-header {
@@ -890,8 +978,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .message {
@@ -916,8 +1009,9 @@
             /* Bright green theme for info messages */
             background: rgba(82, 242, 107, 0.18);
             border: 1px solid rgba(82, 242, 107, 0.55);
-            color: #52f26b; /* bright green text */
-            text-shadow: 0 0 2px rgba(82,242,107,0.4);
+            color: #52f26b;
+            /* bright green text */
+            text-shadow: 0 0 2px rgba(82, 242, 107, 0.4);
         }
 
         /* Brighter success style for QA completion */
@@ -925,7 +1019,7 @@
             background: linear-gradient(135deg, rgba(0, 230, 118, 0.92), rgba(0, 200, 83, 0.92));
             color: #061c06;
             border: 2px solid rgba(0, 230, 118, 0.9);
-            box-shadow: 0 0 14px rgba(0, 230, 118, 0.6), 0 8px 22px rgba(0,0,0,0.35);
+            box-shadow: 0 0 14px rgba(0, 230, 118, 0.6), 0 8px 22px rgba(0, 0, 0, 0.35);
             font-weight: 700;
         }
 
@@ -955,17 +1049,19 @@
         }
 
         /* Left align progress messages while keeping spinner centered */
-        #qaMessages { text-align: left; }
+        #qaMessages {
+            text-align: left;
+        }
 
         .answer-content {
-            background: linear-gradient(120deg, rgba(20,28,42,0.94) 0%, rgba(34,46,66,0.9) 100%);
+            background: linear-gradient(120deg, rgba(20, 28, 42, 0.94) 0%, rgba(34, 46, 66, 0.9) 100%);
             border-left: 6px solid #6b73ff;
             padding: 22px 26px 24px;
             border-radius: 14px;
             margin: 26px 0 20px;
             line-height: 1.66;
-            border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: 0 8px 24px -4px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.08) inset;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
             position: relative;
             overflow: hidden;
         }
@@ -974,8 +1070,8 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 18% 22%, rgba(107,115,255,0.22), transparent 55%),
-                        radial-gradient(circle at 82% 78%, rgba(155,181,255,0.18), transparent 60%);
+            background: radial-gradient(circle at 18% 22%, rgba(107, 115, 255, 0.22), transparent 55%),
+                radial-gradient(circle at 82% 78%, rgba(155, 181, 255, 0.18), transparent 60%);
             pointer-events: none;
             opacity: 0.9;
         }
@@ -1009,17 +1105,18 @@
             .container {
                 padding: 10px;
             }
-            
+
             .tabs {
                 flex-direction: column;
             }
-            
+
             .grid {
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -1032,7 +1129,8 @@
                 <img src="/assets/logo.png" alt="Youtu-GraphRAG Logo" class="logo-image">
                 <div class="logo">Youtu-GraphRAG</div>
             </div>
-            <div class="subtitle" id="subtitleText">✨ Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning ✨</div>
+            <div class="subtitle" id="subtitleText">✨ Vertically Unified Agents for Graph Retrieval-Augmented Complex
+                Reasoning ✨</div>
         </div>
 
         <!-- Navigation Tabs -->
@@ -1083,17 +1181,20 @@
         <!-- Upload Tab -->
         <div id="upload" class="tab-content">
             <div class="card">
-                                <h2 id="uploadDocumentsTitle">Upload Documents</h2>
+                <h2 id="uploadDocumentsTitle">Upload Documents</h2>
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-icon">📁</div>
-                                        <h3 id="uploadDragTitle">Drag & Drop Files Here</h3>
-                                        <p id="uploadDragDesc">or click to browse files</p>
+                    <h3 id="uploadDragTitle">Drag & Drop Files Here</h3>
+                    <p id="uploadDragDesc">or click to browse files</p>
                     <p id="uploadSupports" style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 12px;">
                         Currently supports: .txt, .md, .json, .pdf, .docx, .doc
                     </p>
-                    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; text-align: left; font-size: 11px; color: rgba(255,255,255,0.8);">
-                                                <div id="uploadSampleHeader" style="font-weight: 600; margin-bottom: 8px;">📄 Sample Format (.json):</div>
-                        <pre style="margin: 0; font-family: 'JetBrains Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 5px; overflow-x: auto;">
+                    <div
+                        style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; text-align: left; font-size: 11px; color: rgba(255,255,255,0.8);">
+                        <div id="uploadSampleHeader" style="font-weight: 600; margin-bottom: 8px;">📄 Sample Format
+                            (.json):</div>
+                        <pre
+                            style="margin: 0; font-family: 'JetBrains Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 5px; overflow-x: auto;">
   [
     {
       "title": "Sample doc1",
@@ -1106,16 +1207,17 @@
   ]
 </pre>
                     </div>
-                    <input type="file" id="fileInput" multiple accept=".txt,.json,.md,.pdf,.docx,.doc" style="display: none;">
+                    <input type="file" id="fileInput" multiple accept=".txt,.json,.md,.pdf,.docx,.doc"
+                        style="display: none;">
                 </div>
-                
+
                 <div id="fileList" class="file-list hidden"></div>
-                
+
                 <div style="margin-top: 20px;">
-                                        <button class="btn" id="uploadBtn" disabled onclick="uploadFiles()">Upload Files</button>
-                                        <button class="btn btn-secondary" id="clearUploadBtn" onclick="clearFiles()">Clear</button>
+                    <button class="btn" id="uploadBtn" disabled onclick="uploadFiles()">Upload Files</button>
+                    <button class="btn btn-secondary" id="clearUploadBtn" onclick="clearFiles()">Clear</button>
                 </div>
-                
+
                 <div id="uploadProgress" class="hidden">
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
@@ -1157,26 +1259,27 @@
                 <div class="input-group">
                     <label id="labelQuery">Query:</label>
                     <!-- <textarea class="textarea" id="questionInput" placeholder="Demo Queston: When was the person who Messi's goals in Copa del Rey compared to get signed by Barcelona?"></textarea> -->
-                    <textarea class="textarea" id="questionInput" placeholder="Enter your question here...">When was the person who Messi's goals in Copa del Rey compared to get signed by Barcelona?</textarea>
+                    <textarea class="textarea" id="questionInput"
+                        placeholder="Enter your question here...">When was the person who Messi's goals in Copa del Rey compared to get signed by Barcelona?</textarea>
                 </div>
                 <div class="qa-action-row">
                     <button class="btn" onclick="askQuestion()" id="askBtn">Ask Question</button>
                     <div id="qaCompletionBadge" class="completion-badge" style="display:none;">✔️ Completed</div>
                 </div>
-                
+
                 <div id="qaLoading" class="loading">
                     <div class="spinner"></div>
                     <div id="qaProcessingText">Processing your question...</div>
                     <div id="qaMessages" style="margin-top: 10px;"></div>
                 </div>
-                
+
                 <div id="answerSection" class="hidden">
                     <h3 id="answerTitle">Answer:</h3>
                     <div class="answer-content" id="answerContent"></div>
-                    
+
                     <!-- Retrieval Details Container -->
                     <div id="retrievalDetails" class="retrieval-details" style="display: none;"></div>
-                    
+
                     <!-- <h3>Query Analysis:</h3>
                     <div class="chart-container" id="queryChart"></div> -->
                 </div>
@@ -1197,7 +1300,7 @@
         let questionCount = 0;
 
         // i18n configuration: default to English; switch to Chinese when lang starts with 'zh'
-    let currentLang = (document.documentElement.lang || 'en').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        let currentLang = (document.documentElement.lang || 'en').toLowerCase().startsWith('zh') ? 'zh' : 'en';
         const i18n = {
             en: {
                 processing: 'Processing your question...',
@@ -1227,10 +1330,10 @@
                 answerTitle: 'Answer:',
                 decomposeStart: 'Starting to decompose your question into sub-questions...',
                 decomposeSummary: (t) => `Decomposition complete. Total sub-questions: ${t}`,
-                subQuestion: (i,t,q) => `Sub-question ${i}/${t}: ${q}`,
+                subQuestion: (i, t, q) => `Sub-question ${i}/${t}: ${q}`,
                 ircotStart: 'Starting IRCoT reasoning...',
-                ircotStep: (s,max,thought) => `IRCoT Step ${s}/${max}: ${thought}`,
-                retrievalProgress: (found,cand) => `Retrieval progress: ${found} relevant nodes from ${cand} candidates.`,
+                ircotStep: (s, max, thought) => `IRCoT Step ${s}/${max}: ${thought}`,
+                retrievalProgress: (found, cand) => `Retrieval progress: ${found} relevant nodes from ${cand} candidates.`,
                 answerStart: 'Synthesizing the final answer...',
                 qaCompleted: 'QA process completed!',
                 completedBadge: '✔️ Completed',
@@ -1271,10 +1374,10 @@
                 answerTitle: '答案：',
                 decomposeStart: '开始将你的问题分解为子问题…',
                 decomposeSummary: (t) => `分解完成。子问题总数：${t}`,
-                subQuestion: (i,t,q) => `子问题 ${i}/${t}：${q}`,
+                subQuestion: (i, t, q) => `子问题 ${i}/${t}：${q}`,
                 ircotStart: '开始 IRCoT 推理…',
-                ircotStep: (s,max,thought) => `IRCoT 步骤 ${s}/${max}：${thought}`,
-                retrievalProgress: (found,cand) => `检索进度：在 ${cand} 个候选中找到 ${found} 个相关节点。`,
+                ircotStep: (s, max, thought) => `IRCoT 步骤 ${s}/${max}：${thought}`,
+                retrievalProgress: (found, cand) => `检索进度：在 ${cand} 个候选中找到 ${found} 个相关节点。`,
                 answerStart: '正在综合生成最终答案…',
                 qaCompleted: '问答流程完成！',
                 completedBadge: '✔️ 已完成',
@@ -1338,7 +1441,7 @@
         const API_BASE = '';
 
         // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             initializeApp();
             setupEventListeners();
         });
@@ -1362,7 +1465,7 @@
             fileInput.addEventListener('change', handleFileSelect);
 
             // Question input
-            document.getElementById('questionInput').addEventListener('keydown', function(e) {
+            document.getElementById('questionInput').addEventListener('keydown', function (e) {
                 if (e.ctrlKey && e.key === 'Enter') {
                     askQuestion();
                 }
@@ -1511,9 +1614,11 @@
                     progressText.textContent = `Uploading... ${Math.round(progress)}%`;
                 }, 500);
 
-                const response = await axios.post(`${API_BASE}/api/upload`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                // const response = await axios.post(`${API_BASE}/api/upload`, formData, {
+                //     headers: { 'Content-Type': 'multipart/form-data' }
+                // });
+
+                const response = await axios.post(`${API_BASE}/api/upload`, formData);
 
                 clearInterval(progressInterval);
                 progressFill.style.width = '100%';
@@ -1588,22 +1693,22 @@
                         <span class="status-badge status-${dataset.status === 'ready' ? 'ready' : dataset.status === 'constructing' ? 'processing' : 'error'}">
                             ${dataset.status}
                         </span>
-                        ${dataset.status === 'needs_construction' ? 
-                            `<button class="btn btn-primary" onclick="constructGraph('${dataset.name}')">Construct</button>` : 
-                            ''
-                        }
-                        ${dataset.status === 'ready' ? 
-                            `<button class="btn btn-secondary" onclick="reconstructGraph('${dataset.name}')" title="Reconstruct Graph">🔄 Reconstruct</button>` : 
-                            ''
-                        }
-                        ${dataset.type !== 'demo' ? 
-                            `<button class="btn" onclick="triggerSchemaUpload('${dataset.name}')" title="Upload custom schema">📚 Upload Schema</button>` : 
-                            ''
-                        }
-                        ${dataset.type !== 'demo' ? 
-                            `<button class="btn btn-danger" onclick="deleteDataset('${dataset.name}')" title="Delete Dataset">🗑️ Delete</button>` : 
-                            ''
-                        }
+                        ${dataset.status === 'needs_construction' ?
+                    `<button class="btn btn-primary" onclick="constructGraph('${dataset.name}')">Construct</button>` :
+                    ''
+                }
+                        ${dataset.status === 'ready' ?
+                    `<button class="btn btn-secondary" onclick="reconstructGraph('${dataset.name}')" title="Reconstruct Graph">🔄 Reconstruct</button>` :
+                    ''
+                }
+                        ${dataset.type !== 'demo' ?
+                    `<button class="btn" onclick="triggerSchemaUpload('${dataset.name}')" title="Upload custom schema">📚 Upload Schema</button>` :
+                    ''
+                }
+                        ${dataset.type !== 'demo' ?
+                    `<button class="btn btn-danger" onclick="deleteDataset('${dataset.name}')" title="Delete Dataset">🗑️ Delete</button>` :
+                    ''
+                }
                     </div>
                 </div>
             `).join('');
@@ -1670,11 +1775,11 @@
                 const ws = new WebSocket(`${wsProto}://${window.location.host}/ws/web_client`);
                 let progressMessages = [];
 
-                ws.onopen = function() {
+                ws.onopen = function () {
                     console.log('WebSocket connected for progress updates');
                 };
 
-                ws.onmessage = function(event) {
+                ws.onmessage = function (event) {
                     try {
                         const data = JSON.parse(event.data);
                         if (data.type === 'progress') {
@@ -1695,11 +1800,11 @@
                     }
                 };
 
-                ws.onerror = function(error) {
+                ws.onerror = function (error) {
                     console.log('WebSocket error:', error);
                 };
 
-                ws.onclose = function() {
+                ws.onclose = function () {
                     console.log('WebSocket connection closed');
                 };
 
@@ -1750,11 +1855,11 @@
                 const ws = new WebSocket(`${wsProto}://${window.location.host}/ws/web_client`);
                 let progressMessages = [];
 
-                ws.onopen = function() {
+                ws.onopen = function () {
                     console.log('WebSocket connected for reconstruction progress updates');
                 };
 
-                ws.onmessage = function(event) {
+                ws.onmessage = function (event) {
                     try {
                         const data = JSON.parse(event.data);
                         if (data.type === 'progress') {
@@ -1775,11 +1880,11 @@
                     }
                 };
 
-                ws.onerror = function(error) {
+                ws.onerror = function (error) {
                     console.log('WebSocket error:', error);
                 };
 
-                ws.onclose = function() {
+                ws.onclose = function () {
                     console.log('WebSocket connection closed');
                 };
 
@@ -1808,13 +1913,13 @@
             if (!confirm(`Are you sure you want to delete dataset "${datasetName}"? This action will remove all related files and cannot be undone.`)) {
                 return;
             }
-            
+
             try {
                 showMessage('Deleting dataset...', 'info');
                 const response = await axios.delete(`${API_BASE}/api/datasets/${datasetName}`);
                 showMessage(`Dataset "${datasetName}" deleted successfully!`, 'success');
                 refreshData();
-                
+
                 // If the deleted dataset was selected, clear selections
                 const graphDataset = document.getElementById('graphDataset');
                 const qaDataset = document.getElementById('qaDataset');
@@ -1869,13 +1974,13 @@
 
         function renderGraph(data) {
             const chartContainer = document.getElementById('graphChart');
-            
+
             if (graphChart) {
                 graphChart.dispose();
             }
-            
+
             graphChart = echarts.init(chartContainer);
-            
+
             const option = {
                 backgroundColor: 'transparent',
                 // title: {
@@ -1890,8 +1995,8 @@
                     formatter: function (params) {
                         if (params.dataType === 'node') {
                             const d = params.data || {};
-                            let name = (d.name || '').toString().replace(/\s+/g,' ').trim();
-                            if (name.length > 20) name = name.slice(0,20) + '...';
+                            let name = (d.name || '').toString().replace(/\s+/g, ' ').trim();
+                            if (name.length > 20) name = name.slice(0, 20) + '...';
                             const category = d.category || d.type || '';
                             return name ? name : category || 'node';
                         } else if (params.dataType === 'edge') {
@@ -1904,7 +2009,7 @@
                     type: 'scroll',
                     bottom: 10,
                     textStyle: { color: 'rgba(255, 255, 255, 0.85)' },
-                    data: (data.categories && data.categories.map(function(c){return c.name;})) || []
+                    data: (data.categories && data.categories.map(function (c) { return c.name; })) || []
                 },
                 series: [{
                     type: 'graph',
@@ -1916,10 +2021,10 @@
                     label: {
                         show: true,
                         color: 'rgba(255, 255, 255, 0.9)',
-                        formatter: function(p){
+                        formatter: function (p) {
                             const d = p.data || {};
-                            let name = (d.name || '').toString().replace(/\s+/g,' ').trim();
-                            if (name.length > 20) name = name.slice(0,20) + '...';
+                            let name = (d.name || '').toString().replace(/\s+/g, ' ').trim();
+                            if (name.length > 20) name = name.slice(0, 20) + '...';
                             return name || '';
                         }
                     },
@@ -1934,11 +2039,11 @@
                     }
                 }]
             };
-            
+
             graphChart.setOption(option);
         }
 
-    async function askQuestion() {
+        async function askQuestion() {
             const datasetName = document.getElementById('qaDataset').value;
             const question = document.getElementById('questionInput').value.trim();
 
@@ -1982,17 +2087,17 @@
                                     const msg = `【子问题 ${data.index}/${data.total}】${q}｜三元组：${data.triples_count || 0}｜片段：${data.chunks_count || 0}`;
                                     showMessage(msg, 'info');
                                     if (Array.isArray(data.triples_preview) && data.triples_preview.length) {
-                                        showMessage('预览：' + data.triples_preview.slice(0,3).join(' | '), 'info');
+                                        showMessage('预览：' + data.triples_preview.slice(0, 3).join(' | '), 'info');
                                     }
                                 } else {
                                     const msg = `[Sub ${data.index}/${data.total}] ${q} | Triples: ${data.triples_count || 0} | Chunks: ${data.chunks_count || 0}`;
                                     showMessage(msg, 'info');
                                     if (Array.isArray(data.triples_preview) && data.triples_preview.length) {
-                                        showMessage('Preview: ' + data.triples_preview.slice(0,3).join(' | '), 'info');
+                                        showMessage('Preview: ' + data.triples_preview.slice(0, 3).join(' | '), 'info');
                                     }
                                 }
                             } else if (data.stage === 'ircot') {
-                                const thought = (data.thought_preview || '').toString().slice(0,140) + '...';
+                                const thought = (data.thought_preview || '').toString().slice(0, 140) + '...';
                                 const msg = currentLang === 'zh' ? `IRCoT 步骤 ${data.step}/${data.max_steps}：${thought}` : `IRCoT Step ${data.step}/${data.max_steps}: ${thought}`;
                                 showMessage(msg, 'info');
                             }
@@ -2002,13 +2107,13 @@
                             const badge = document.getElementById('qaCompletionBadge');
                             if (badge) { badge.style.display = 'inline-flex'; badge.textContent = i18n[currentLang].completedBadge; }
                             // Do not close here; HTTP response will render the final details
-                            setTimeout(() => { try { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); } catch(_){} }, 1000);
+                            setTimeout(() => { try { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); } catch (_) { } }, 1000);
                         }
                     } catch (e) {
                         // non-JSON message
                     }
                 };
-                ws.onerror = () => {};
+                ws.onerror = () => { };
 
                 const response = await axios.post(`${API_BASE}/api/ask-question`, {
                     question: question,
@@ -2034,21 +2139,21 @@
                     hide();
                 }
                 askBtn.disabled = false;
-                try { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); } catch(_){}
+                try { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); } catch (_) { }
             }
         }
 
         function displayAnswer(result) {
             console.log('displayAnswer called with result:', result);
-            
+
             document.getElementById('answerContent').textContent = result.answer;
-            
+
             // Display detailed retrieval information
             displayRetrievalDetails(result);
-            
+
             // Render query analysis chart
             // renderQueryChart(result.visualization_data);
-            
+
             document.getElementById('answerSection').classList.remove('hidden');
         }
 
@@ -2072,15 +2177,15 @@
                 }
                 return out;
             }
-            
+
             const detailsContainer = document.getElementById('retrievalDetails');
             if (!detailsContainer) {
                 console.error('Retrieval details container not found');
                 return;
             }
-            
+
             console.log('Found retrieval details container, showing it');
-            
+
             // Show the container
             detailsContainer.style.display = 'block';
 
@@ -2097,7 +2202,7 @@
                     }
                 }
             }
-            
+
             let detailsHtml = `
                 <div class="retrieval-summary">
             <h4>🔍 Retrieval Stats</h4>
@@ -2121,7 +2226,7 @@
             <h4>📝 Question Decomposition</h4>
                     <div class="subquestions-list">
             `;
-            
+
             if (result.sub_questions && result.sub_questions.length > 0) {
                 result.sub_questions.forEach((sq, index) => {
                     const step = result.reasoning_steps?.[index] || {};
@@ -2152,7 +2257,7 @@
             } else {
                 detailsHtml += '<p class="no-data">No sub-question data</p>';
             }
-            
+
             detailsHtml += `
                     </div>
                 </div>
@@ -2167,10 +2272,10 @@
                     </div>
                 </div>
             `;
-            
+
             detailsHtml += '</div></div>';
             detailsContainer.innerHTML = detailsHtml;
-            
+
             // Render triples chart after setting HTML and ensuring container is visible
             setTimeout(() => {
                 console.log('About to render triples chart with:', result.retrieved_triples?.length || 0, 'triples');
@@ -2189,30 +2294,30 @@
             console.log('First triple example:', triples[0]);
 
             // Helper: truncate by words. If more than 3 words, keep first 2 then ellipsis.
-            function truncateWords(str){
-                if(!str) return '';
+            function truncateWords(str) {
+                if (!str) return '';
                 const words = str.split(/\s+/).filter(Boolean);
-                if(words.length <= 3) return words.join(' ');
-                return words.slice(0,2).join(' ') + '...';
+                if (words.length <= 3) return words.join(' ');
+                return words.slice(0, 2).join(' ') + '...';
             }
-            
+
             const chartContainer = document.getElementById('triplesChart');
             if (!chartContainer) {
                 console.error('Triples chart container not found');
                 return;
             }
-            
+
             console.log('Found chart container, container dimensions:', chartContainer.offsetWidth, 'x', chartContainer.offsetHeight);
-            
+
             // Check if ECharts is available
             if (typeof echarts === 'undefined') {
                 console.error('ECharts library is not loaded!');
                 chartContainer.innerHTML = '<div style="color: red; text-align: center; padding: 50px;">ECharts library not loaded</div>';
                 return;
             }
-            
+
             console.log('ECharts library available, version:', echarts.version);
-            
+
             // Dispose existing chart
             if (window.triplesChart && typeof window.triplesChart.dispose === 'function') {
                 try {
@@ -2223,7 +2328,7 @@
                 }
             }
             window.triplesChart = null;
-            
+
             try {
                 window.triplesChart = echarts.init(chartContainer);
                 console.log('ECharts initialized successfully');
@@ -2232,14 +2337,14 @@
                 chartContainer.innerHTML = '<div style="color: red; text-align: center; padding: 50px;">Error initializing ECharts: ' + e.message + '</div>';
                 return;
             }
-            
+
             // Parse triples and build graph data
             const nodes = new Map();
             const links = [];
             const categories = new Set();
-            
+
             console.log('Parsing', triples.length, 'triples...');
-            
+
             triples.forEach((tripleStr, index) => {
                 // Parse triple format: (subject, relation, object) [score: X.XXX]
                 const match = tripleStr.match(/\(([^,]+),\s*([^,]+),\s*([^)]+)\)/);
@@ -2248,20 +2353,20 @@
                         console.log(`Triple ${index + 1} parsed successfully:`, match.slice(1));
                     }
                     let [, subject, relation, object] = match;
-                    
+
                     // Clean up entity names and extract schema types
                     subject = subject.trim();
                     relation = relation.trim();
                     object = object.trim();
-                    
+
                     // Extract schema type if present
                     const subjectType = extractSchemaType(subject) || 'entity';
                     const objectType = extractSchemaType(object) || 'entity';
-                    
+
                     // Clean entity names
                     subject = cleanEntityName(subject);
                     object = cleanEntityName(object);
-                    
+
                     // Add nodes
                     if (!nodes.has(subject)) {
                         nodes.set(subject, {
@@ -2274,7 +2379,7 @@
                         });
                         categories.add(subjectType);
                     }
-                    
+
                     if (!nodes.has(object)) {
                         nodes.set(object, {
                             id: object,
@@ -2286,27 +2391,27 @@
                         });
                         categories.add(objectType);
                     }
-                    
+
                     // Add link with truncated display name and rawName preserved
                     links.push({
                         source: subject,
                         target: object,
                         name: truncateWords(relation),
                         rawName: relation,
-                        lineStyle: { 
+                        lineStyle: {
                             color: '#6b73ff',
                             width: 2
                         }
                     });
                 }
             });
-            
+
             const nodesList = Array.from(nodes.values());
             const categoriesList = Array.from(categories).map(cat => ({
                 name: cat,
                 itemStyle: { color: getCategoryColor(cat) }
             }));
-            
+
             const option = {
                 backgroundColor: 'transparent',
                 // title: {
@@ -2322,12 +2427,12 @@
                     trigger: 'item',
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     textStyle: { color: '#ffffff' },
-                    formatter: function(params) {
+                    formatter: function (params) {
                         if (params.dataType === 'node') {
-                            const rawFull = (params.data.rawName || params.data.id || '').toString().replace(/\s+/g,' ').trim();
+                            const rawFull = (params.data.rawName || params.data.id || '').toString().replace(/\s+/g, ' ').trim();
                             return `<strong>${rawFull}</strong><br/>Type: ${params.data.category}`;
                         } else if (params.dataType === 'edge') {
-                            const fullRel = (params.data.rawName || params.data.name || '').toString().replace(/\s+/g,' ').trim();
+                            const fullRel = (params.data.rawName || params.data.name || '').toString().replace(/\s+/g, ' ').trim();
                             return `<strong>${fullRel}</strong><br/>${params.data.source} → ${params.data.target}`;
                         }
                         return '';
@@ -2352,8 +2457,8 @@
                         position: 'right',
                         color: 'rgba(255, 255, 255, 0.9)',
                         fontSize: 10,
-                        formatter: function(p){
-                            let name = (p.data && (p.data.rawName || p.data.name || p.data.id) || '').toString().replace(/\s+/g,' ').trim();
+                        formatter: function (p) {
+                            let name = (p.data && (p.data.rawName || p.data.name || p.data.id) || '').toString().replace(/\s+/g, ' ').trim();
                             return truncateWords(name);
                         }
                     },
@@ -2371,7 +2476,7 @@
                         show: true,
                         color: 'rgba(255,255,255,0.75)',
                         fontSize: 10,
-                        formatter: function(p){
+                        formatter: function (p) {
                             return truncateWords(p.data && (p.data.rawName || p.data.name) || '');
                         }
                     },
@@ -2383,19 +2488,19 @@
                     }
                 }]
             };
-            
+
             console.log('Setting chart option with:', nodesList.length, 'nodes and', links.length, 'links');
-            
+
             if (nodesList.length === 0) {
                 console.warn('No nodes to display, showing empty message');
                 chartContainer.innerHTML = '<div style="color: #ffb347; text-align: center; padding: 50px;">No entity relationships found</div>';
                 return;
             }
-            
+
             try {
                 window.triplesChart.setOption(option);
                 console.log('Chart option set successfully');
-                
+
                 // Ensure chart is properly sized
                 setTimeout(() => {
                     if (window.triplesChart && typeof window.triplesChart.resize === 'function') {
@@ -2407,27 +2512,27 @@
                         }
                     }
                 }, 100);
-                
+
                 console.log('Triples chart rendered successfully!');
             } catch (e) {
                 console.error('Error setting chart option:', e);
                 chartContainer.innerHTML = '<div style="color: red; text-align: center; padding: 50px;">Chart rendering error: ' + e.message + '</div>';
             }
         }
-        
+
         function extractSchemaType(entityStr) {
             const match = entityStr.match(/\[schema_type:\s*([^\]]+)\]/);
             return match ? match[1].trim() : null;
         }
-        
+
         function cleanEntityName(entityStr) {
             return entityStr.replace(/\s*\[schema_type:[^\]]+\]/g, '').trim();
         }
-        
+
         function getCategoryColor(category) {
             const colors = {
                 'person': '#6b73ff',
-                'organization': '#9bb5ff', 
+                'organization': '#9bb5ff',
                 'location': '#a8c8ec',
                 'event': '#b8d4f0',
                 'object': '#e6f3ff',
@@ -2440,13 +2545,13 @@
 
         function renderQueryChart(data) {
             const chartContainer = document.getElementById('queryChart');
-            
+
             if (queryChart) {
                 queryChart.dispose();
             }
-            
+
             queryChart = echarts.init(chartContainer);
-            
+
             const option = {
                 backgroundColor: 'transparent',
                 title: {
@@ -2463,17 +2568,17 @@
                     type: 'graph',
                     layout: 'force',
                     data: data?.subqueries?.nodes || [
-                        {id: 'q1', name: 'Original Question', category: 'question', symbolSize: 40},
-                        {id: 'sq1', name: 'Sub-question 1', category: 'sub_question', symbolSize: 30},
-                        {id: 'sq2', name: 'Sub-question 2', category: 'sub_question', symbolSize: 30}
+                        { id: 'q1', name: 'Original Question', category: 'question', symbolSize: 40 },
+                        { id: 'sq1', name: 'Sub-question 1', category: 'sub_question', symbolSize: 30 },
+                        { id: 'sq2', name: 'Sub-question 2', category: 'sub_question', symbolSize: 30 }
                     ],
                     links: data?.subqueries?.links || [
-                        {source: 'q1', target: 'sq1'},
-                        {source: 'q1', target: 'sq2'}
+                        { source: 'q1', target: 'sq1' },
+                        { source: 'q1', target: 'sq2' }
                     ],
                     categories: data?.subqueries?.categories || [
-                        {name: 'question', itemStyle: {color: '#6b73ff'}},
-                        {name: 'sub_question', itemStyle: {color: '#9bb5ff'}}
+                        { name: 'question', itemStyle: { color: '#6b73ff' } },
+                        { name: 'sub_question', itemStyle: { color: '#9bb5ff' } }
                     ],
                     roam: true,
                     label: {
@@ -2490,7 +2595,7 @@
                     }
                 }]
             };
-            
+
             queryChart.setOption(option);
         }
 
@@ -2501,9 +2606,9 @@
             const message = document.createElement('div');
             message.className = `message ${type}`;
             message.textContent = text;
-            
+
             messages.appendChild(message);
-            
+
             setTimeout(() => {
                 message.remove();
             }, durationMs);
@@ -2513,4 +2618,5 @@
         refreshData();
     </script>
 </body>
+
 </html>

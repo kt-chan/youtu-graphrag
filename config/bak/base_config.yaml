@@ -1,4 +1,3 @@
-# base_config.yaml
 construction:
   chunk_size: 5000
   datasets_no_chunk:
@@ -9,7 +8,6 @@ construction:
   - annoy_chs
   - annoy_eng
   - demo
-  - debt_collection
   max_workers: 32
   mode: agent  # set noagent to speed up
   overlap: 200
@@ -55,11 +53,6 @@ datasets:
     qa_path: data/anony_eng/final_qa_pairs.json
     schema_path: schemas/anony_eng.json
     graph_output: output/graphs/anony_eng_new.json
-  debt_collection:
-    corpus_path: data/debt_collection/debt_collection_corpus.json
-    qa_path: data/debt_collection/debt_collection_qa.json
-    schema_path: schemas/debt_collection.json
-    graph_output: output/graphs/debt_collection_new.json
 
 embeddings:
   batch_size: 32
@@ -68,7 +61,8 @@ embeddings:
   model_name: all-MiniLM-L6-v2
 
 nlp:
-  spacy_model: zh_core_web_lg
+  spacy_model: en_core_web_lg
+
 
 output:
   base_dir: output
@@ -147,7 +141,7 @@ prompts:
       , \"策划\", \"智取生辰纲\"],\n      [\"智取生辰纲\", \"发生地\", \"LOCATION#1\"]\n    ],\n    \"entity_types\": {{\n      \"PERSON#1\": \"person\",\n      \"智取生辰纲\": \"event\",\n      \"LOCATION#1\": \"location\"\n    }},\n    \"new_schema_types\": {{\n      \"nodes\": [\"武器\"],\n      \"relations\": [\"使用\"],\n      \"attributes\": [\"材质\"]\n    }}\n}}\n"
     novel_eng: "You are an expert information extractor and structured data organizer.\
       \ Your task is to analyze the provided text and extract as many valuable entities,\
-      \ their attributes, and relations as possible in a structured JSON format. \ 
+      \ their attributes, and relations as possible in a structured JSON format. \
       \ \n\nGuidelines:\n1. Prioritize the following predefined schema for extraction;\n\
       \   ```{schema}```\n2. Flexibility: If the context doesn't fit the predefined\
       \ schema, extract the valuable knowledge as needed;\n3. Conciseness: The Attributes\
@@ -164,7 +158,7 @@ prompts:
       : \"location\"\n  }}\n}}\n"
     novel_eng_agent: "You are an expert information extractor and structured data organizer.\
       \ Your task is to analyze the provided text and extract as many valuable entities,\
-      \ their attributes, and relations as possible in a structured JSON format. \ 
+      \ their attributes, and relations as possible in a structured JSON format. \
       \ \n\nGuidelines:\n1. Prioritize the following predefined schema for extraction;\n\
       \   ```{schema}```\n2. Flexibility: If the context doesn't fit the predefined\
       \ schema, extract the valuable knowledge as needed;\n3. Conciseness: The Attributes\
@@ -185,8 +179,6 @@ prompts:
       : {{\n    \"PERSON#1\": \"person\",\n    \"LOCATION#1\": \"location\"\n  }},\n\
       \  \"new_schema_types\": {{\n      \"nodes\": [\"Instrument\"],\n      \"relations\"\
       : [\"owns\"],\n      \"attributes\": [\"skill_level\"]\n  }}\n}}\n"
-    debt_collection: "你是信用卡外呼催收对话信息提取专家。请根据催收通话内容，参考以下债务催收本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板、合规规则等关键信息，并严格按照示例返回 JSON 格式。\n\n催收对话内容:\n```{chunk}```\n\n参考 schema:\n```{schema}```\n\n要求：\n1. 识别对话阶段（如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing）。\n2. 识别债务人画像（如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial）。\n3. 识别异议类别（如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal）。\n4. 识别说服策略（如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management）。\n5. 提取话术模板与合规规则（如 FDCPA Mini-Miranda、录音告知、不威胁等）。\n6. 实体名称严格使用对话中的表述，不要自行推理创造。\n7. 根据提供的 schema 为每个实体分配正确的类型。\n\n注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。\n\n示例输出，包括属性、三元组及实体类型：\n{{\n  \"attributes\": {{\n    \"Call_2317941550352385028\": [\"call_date: 20260506\", \"talk_time: 613\", \"overdue_bucket: M1\"]\n  }},\n  \"triples\": [\n    [\"Call_2317941550352385028\", \"has_next_stage\", \"Stage_Opening_Verification\"],\n    [\"Stage_Hardship_Exploration\", \"triggered_in_stage\", \"Objection_Financial_Hardship\"],\n    [\"Persona_Worried\", \"susceptible_to\", \"Strategy_Reciprocity\"]\n  ],\n  \"entity_types\": {{\n    \"Call_2317941550352385028\": \"collection_call\",\n    \"Stage_Opening_Verification\": \"dialogue_stage\",\n    \"Objection_Financial_Hardship\": \"objection_category\",\n    \"Persona_Worried\": \"debtor_persona\",\n    \"Strategy_Reciprocity\": \"persuasion_strategy\"\n  }}\n}}\n"
-    debt_collection_agent: "你是信用卡外呼催收对话信息提取专家。请根据催收通话内容，参考以下债务催收本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板、合规规则等关键信息，并严格按照示例返回 JSON 格式。\n\n催收对话内容:\n```{chunk}```\n\n参考 schema:\n```{schema}```\n\n要求：\n1. 识别对话阶段（如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing）。\n2. 识别债务人画像（如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial）。\n3. 识别异议类别（如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal）。\n4. 识别说服策略（如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management）。\n5. 提取话术模板与合规规则（如 FDCPA Mini-Miranda、录音告知、不威胁等）。\n6. 实体名称严格使用对话中的表述，不要自行推理创造。\n7. 根据提供的 schema 为每个实体分配正确的类型。\n\n模式演化：如果你发现新的重要实体类型、关系类型或属性类型对知识提取有价值，请将它们包含在 \"new_schema_types\" 字段中。注意，添加新模式的严格阈值是 0.9，需要考虑重要性和与现有模式的相似性。\n\n注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。\n\n示例输出，包括属性、三元组、实体类型及新模式类型：\n{{\n  \"attributes\": {{\n    \"Call_2317941550352385028\": [\"call_date: 20260506\", \"talk_time: 613\", \"overdue_bucket: M1\"]\n  }},\n  \"triples\": [\n    [\"Call_2317941550352385028\", \"has_next_stage\", \"Stage_Opening_Verification\"],\n    [\"Stage_Hardship_Exploration\", \"triggered_in_stage\", \"Objection_Financial_Hardship\"],\n    [\"Persona_Worried\", \"susceptible_to\", \"Strategy_Reciprocity\"]\n  ],\n  \"entity_types\": {{\n    \"Call_2317941550352385028\": \"collection_call\",\n    \"Stage_Opening_Verification\": \"dialogue_stage\",\n    \"Objection_Financial_Hardship\": \"objection_category\",\n    \"Persona_Worried\": \"debtor_persona\",\n    \"Strategy_Reciprocity\": \"persuasion_strategy\"\n  }},\n  \"new_schema_types\": {{\n      \"nodes\": [\"payment_plan\"],\n      \"relations\": [\"agreed_to\"],\n      \"attributes\": [\"installment_count\"]\n  }}\n}}\n"
   decomposition:
     general: "You are a professional question decomposition expert specializing in\
       \ multi-hop reasoning.\nGiven the following ontology and the question, decompose\
@@ -215,7 +207,6 @@ prompts:
       \           {{\\\"sub-question\\\": \\\"智取生辰纲中的PERSON、LOCATION有什么特殊属性？\\\"}}\n       ],\n       \\\"involved_types\\\": {{\n           \\\"nodes\\\": [\\\"person\\\", \\\"event\\\", \\\"location\\\"],\n           \\\"relations\\\": [\\\"策划\\\", \\\"发生地\\\"],\n           \\\"attributes\\\": [\\\"绰号\\\", \\\"职位\\\", \\\"特长\\\"]\n       }}\n   }}\n   如果是简单问题，返回原始问题作为单个子问题。\n\
       \   原始问题：\\\"智取生辰纲事件中，PERSON#1是谁\\\"\n   输出：\n   {{\n       \\\"sub_questions\\\": [\n           {{\\\"sub-question\\\": \\\"\
       智取生辰纲事件中，PERSON#1是谁？\\\"}}\n       ],\n       \\\"involved_types\\\": {{\n           \\\"nodes\\\": [\\\"person\\\", \\\"event\\\"],\n           \\\"relations\\\": [\\\"参与\\\"],\n           \\\"attributes\\\": [\\\"name\\\"]\n       }}\n   }}\n"
-    debt_collection: "你是信用卡催收对话问答分解专家。请根据以下债务催收本体模式，将问题分解为 2-3 个子问题，并识别涉及的 schema 类型。\n\n要求：\n1. 每个子问题必须：\n   - 明确且专注于一个事实或关系，识别所有实体、关系和推理步骤\n   - 明确引用原始问题中的实体和关系\n   - 设计为检索最终答案所需的相关知识\n2. 对于简单问题（1-2 跳），返回原始问题作为单个子问题\n3. 分析问题并识别所有可能涉及的 schema 类型\n4. 返回一个 JSON 对象，包含 sub_questions 数组和 involved_types 对象。\n\n问题：{question}\n\n图本体模式：{ontology}\n\n示例：\n原始问题：\"在 M1 逾期且失业的客户中，哪些说服策略对 Worried 型债务人最有效？\"\n输出：\n{{\n  \"sub_questions\": [\n    {{\"sub-question\": \"M1 逾期且失业的客户通常表现出哪些债务人画像？\"}},\n    {{\"sub-question\": \"Worried 型债务人容易接受哪些说服策略？\"}},\n    {{\"sub-question\": \"哪些说服策略在失业导致的财务困难场景中成功促成了还款承诺？\"}}\n  ],\n  \"involved_types\": {{\n    \"nodes\": [\"debtor_persona\", \"persuasion_strategy\", \"objection_category\", \"payment_commitment\"],\n    \"relations\": [\"susceptible_to\", \"triggered_in_stage\", \"resolved_by\", \"made_by\"],\n    \"attributes\": [\"persona_type\", \"principle_type\", \"objection_type\", \"commitment_status\"]\n  }}\n}}\n\n如果是简单问题，返回原始问题作为单个子问题。\n原始问题：\"客户本次逾期的原因是什么？\"\n输出：\n{{\n  \"sub_questions\": [\n    {{\"sub-question\": \"客户本次逾期的原因是什么？\"}}\n  ],\n  \"involved_types\": {{\n    \"nodes\": [\"hardship_event\", \"objection_category\"],\n    \"relations\": [\"caused_by\"],\n    \"attributes\": [\"hardship_type\"]\n  }}\n}}\n"
   retrieval:
     general: 'You are an expert knowledge assistant. Your task is to answer the question
       based on the provided knowledge context.
@@ -273,9 +264,9 @@ prompts:
       "FINAL_ANSWER:" followed by your final answer
 
       4. If you need more information, in the end of your response, write a specific
-      query begin with "NEW_QUERIES:" to retrieve additional relevant information
+      query begin with "The new query is:" to retrieve additional relevant information
 
-      5. Be specific and focused in your reasoning, and you can only return either 3 or 4 in your response.
+      5. Be specific and focused in your reasoning
 
 
       Your reasoning:
@@ -305,91 +296,6 @@ prompts:
       \ name\n4. For temporal questions, provide the specific date, year, or time\
       \ period\n\nQuestion: {question}\n\nKnowledge Context:\n{context}   \n\nAnswer\
       \ (be specific and direct):\n"
-    debt_collection: '你是信用卡催收知识助手，你的任务是根据提供的债务催收知识图谱回答问题。
-
-      1. 仅使用提供的知识上下文回答问题。
-
-      2. 如果知识不足，请拒绝回答。
-
-      3. 回答要精确简洁。
-
-      4. 对于事实性问题，提供具体的事实或实体名称。
-
-      5. 对于时间性问题，提供具体的日期、年份或时间段。
-
-      问题：{question}
-
-      知识上下文：
-
-      {context}
-
-      答案（具体直接）：
-
-      '
-    debt_collection_ircot: '你是信用卡催收知识助手，使用迭代检索和思维链推理。
-      你的任务：根据当前催收对话和知识上下文，判断信息是否足够生成催收员下一句应答；若足够，输出最终话术；若不足，输出下一轮检索查询。
-
-      用户原始问题：{initial_query}
-
-      当前思考问题：{current_query}
-
-      可用知识上下文：
-      {context}
-
-      之前的思考：{previous_thoughts}
-
-      当前迭代步骤：{step}
-
-      请按以下规则逐步处理：
-
-      1. 对话状态分析
-      - 识别客户逾期阶段，如 M1、最低还款额、总欠款、账户类型。
-      - 识别客户陈述：失业、旅游行业、担心征信、没钱、还款意愿、情绪状态。
-      - 识别缺失信息：客户可还金额、可还时间、是否接受部分还款、账单调整、减免、个性化分期等。
-
-      2. 知识匹配
-      - 从 Triples 和 Chunks 中查找与客户画像最匹配的案例、策略、方案和话术。
-      - 优先使用成功案例，例如“先还部分 + 申请减免 + 促成 PTP”“账单调整”“温和引导当日还清”。
-      - 不得编造上下文中不存在的政策；若上下文显示某方案不可用，如个性化分期，不得承诺。
-      - 所有金额、方案、时间必须与知识上下文一致。
-
-      3. 决策规则
-      - 若信息足够生成下一句催收员话术，则在最后以新段落 `FINAL_ANSWER:` 开头，只输出催收员话术。
-      - 若信息不足，则在最后以新段落 `NEW_QUERIES:` 开头，只输出 1-5 条具体检索查询。
-      - 不要同时输出 `FINAL_ANSWER:` 和 `NEW_QUERIES:`。
-      - 若当前步骤 {step} 已达到最大迭代轮次，例如 5 轮，必须输出 `FINAL_ANSWER:`。
-
-      4. 最终话术要求
-      - 包含：共情、征信风险提示、具体可选方案、明确金额或时间、官方还款渠道、后续影响。
-      - 针对失业且担心征信的客户，应避免强硬施压，可建议先还部分、申请减免、账单调整，并询问可处理时间。
-      - 话术自然、合规、以客户为中心，避免威胁、辱骂、虚假承诺。
-
-      5. 输出格式
-      - 推理简洁、精确、集中。
-      - 若输出最终答案，格式为：
-
-      FINAL_ANSWER:
-      催收员：……
-
-      - 若需要继续检索，格式为：
-
-      NEW_QUERIES:
-      - 查询1
-      - 查询2
-
-      你的推理：
-
-      '
-
-    debt_collection_novel: '你是信用卡催收知识助手，你的任务是根据提供的债务催收知识图谱回答问题。
-
-      1. 如果知识库中的信息不足以回答问题，请根据你的推理和知识回答。
-
-      2. 回答要简洁明了。
-
-      你的推理：
-
-      '
 retrieval:
   agent:
     enable_ircot: true
