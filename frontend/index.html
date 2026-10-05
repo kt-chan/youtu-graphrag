@@ -1981,6 +1981,8 @@
 
             graphChart = echarts.init(chartContainer);
 
+            const MAX_LABEL_LEN = 200; 
+
             const option = {
                 backgroundColor: 'transparent',
                 // title: {
@@ -1996,7 +1998,7 @@
                         if (params.dataType === 'node') {
                             const d = params.data || {};
                             let name = (d.name || '').toString().replace(/\s+/g, ' ').trim();
-                            if (name.length > 20) name = name.slice(0, 20) + '...';
+                            if (name.length > MAX_LABEL_LEN) name = name.slice(0, MAX_LABEL_LEN) + '...';
                             const category = d.category || d.type || '';
                             return name ? name : category || 'node';
                         } else if (params.dataType === 'edge') {
@@ -2021,10 +2023,14 @@
                     label: {
                         show: true,
                         color: 'rgba(255, 255, 255, 0.9)',
+                        position: 'right',
+                        // allow long labels to wrap instead of being cut off
+                        width: 140,
+                        overflow: 'break',
                         formatter: function (p) {
                             const d = p.data || {};
                             let name = (d.name || '').toString().replace(/\s+/g, ' ').trim();
-                            if (name.length > 20) name = name.slice(0, 20) + '...';
+                            if (name.length > MAX_LABEL_LEN) name = name.slice(0, MAX_LABEL_LEN) + '...';
                             return name || '';
                         }
                     },

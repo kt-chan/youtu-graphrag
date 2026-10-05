@@ -51,9 +51,11 @@ _ENUM_NODE_TYPES = {
     "MasterSOPStage",
     "SubStage",
     "ComplianceArtifact",
+    "ObjectionCategory",
+    "CallOutcome",
+    "RFD",
     # Extend as more ontology-backed enums are added, e.g.:
     # "DebtorPersona",
-    # "ObjectionCategory",
     # "PersuasionStrategy",
 }
 
@@ -94,6 +96,9 @@ class KTBuilder:
 
         self.llm_client = call_llm_api.LLMCompletionCall()
         self.all_chunks: Dict[str, str] = {}
+        self.llm_responses: Dict[str, str] = {}
+        self._response_cache_lock = threading.Lock()
+        self._load_llm_response_cache()
 
         self.mode = mode or config.construction.mode
 
@@ -371,42 +376,29 @@ class KTBuilder:
     # Graph walk — Pydantic path
     # -------------------------------------------------------------------------
 
-    def _resolve_node_id(self, obj: BaseModel, prefix: str, chunk_id: str) -> str:
+    def _resolve_node_id(self, obj: BaseModel, prefix: str) -> str:
         for field_name in type(obj).model_fields:
             if field_name.endswith("_id"):
                 val = getattr(obj, field_name, None)
                 if val is None:
                     continue
-                # Use the enum's value, not its repr
                 if isinstance(val, Enum):
                     val = val.value
-                return f"{prefix}__{chunk_id}__{val}"
+                return f"{prefix}__{val}"
 
         with self.lock:
-            node_id = f"{prefix}__{chunk_id}__{self.node_counter}"
+            node_id = f"{prefix}__{self.node_counter}"
             self.node_counter += 1
         return node_id
 
-    def _enum_target_node_id(self, enum_val: Enum, chunk_id: str) -> Optional[str]:
-        """
-        Map an Enum member to a canonical node ID when the enum class
-        represents a node type (see `_ENUM_NODE_TYPES`). Returns None when
-        the enum is a scalar classification label.
-
-        The ID convention matches `_resolve_node_id`:
-            f"{prefix}__{chunk_id}__{enum_value}"
-
-        Example:
-            MasterSOPStageEnum.STAGE_1_OPENING → "MasterSOPStage__<chunk>__Stage_1_Opening"
-            RFDEnum.INVOLUNTARY_UNEMPLOYMENT   → None  (stays a property)
-        """
-        cls_name = type(enum_val).__name__  # e.g. "MasterSOPStageEnum"
+    def _enum_target_node_id(self, enum_val: Enum) -> Optional[str]:
+        cls_name = type(enum_val).__name__
         if not cls_name.endswith("Enum"):
             return None
-        prefix = cls_name[:-4]  # e.g. "MasterSOPStage"
+        prefix = cls_name[:-4]
         if prefix not in _ENUM_NODE_TYPES:
             return None
-        return f"{prefix}__{chunk_id}__{enum_val.value}"
+        return f"{prefix}__{enum_val.value}"
 
     @staticmethod
     def _serialize_scalar(value: Any) -> Optional[str]:
@@ -423,7 +415,6 @@ class KTBuilder:
         obj: Any,
         parent_id: Optional[str],
         edge_label: Optional[str],
-        chunk_id: str,
         nodes_out: List[Tuple[str, Dict[str, Any]]],
         edges_out: List[Tuple[str, str, str]],
         hints_out: Dict[str, Dict[str, Any]],  # NEW
@@ -436,7 +427,6 @@ class KTBuilder:
                     item,
                     parent_id,
                     edge_label,
-                    chunk_id,
                     nodes_out,
                     edges_out,
                     hints_out,
@@ -450,7 +440,7 @@ class KTBuilder:
 
         cls = type(obj)
         cls_name = cls.__name__
-        node_id = self._resolve_node_id(obj, cls_name, chunk_id)
+        node_id = self._resolve_node_id(obj, cls_name)
 
         if parent_id and edge_label:
             edges_out.append((parent_id, node_id, edge_label))
@@ -463,7 +453,6 @@ class KTBuilder:
         props: Dict[str, Any] = {
             "name": node_id,
             "class": cls_name,
-            "chunk id": chunk_id,
         }
         for field_name, field_info in cls.model_fields.items():
             val = getattr(obj, field_name, None)
@@ -473,7 +462,7 @@ class KTBuilder:
             # Bare enum
             if isinstance(val, Enum):
                 # Node-type enums are emitted as edges below — skip as property.
-                if self._enum_target_node_id(val, chunk_id) is None:
+                if self._enum_target_node_id(val) is None:
                     s = self._serialize_scalar(val)
                     if s is not None:
                         props[field_name] = s
@@ -489,7 +478,7 @@ class KTBuilder:
                         for x in val
                         if not (
                             isinstance(x, Enum)
-                            and self._enum_target_node_id(x, chunk_id) is not None
+                            and self._enum_target_node_id(x) is not None
                         )
                     ]
                     if filtered:
@@ -523,7 +512,6 @@ class KTBuilder:
                     val,
                     node_id,
                     inner_edge_label,
-                    chunk_id,
                     nodes_out,
                     edges_out,
                     hints_out,
@@ -532,7 +520,7 @@ class KTBuilder:
 
             # Bare enum that maps to a node type → edge + stub hint
             elif isinstance(val, Enum):
-                target_id = self._enum_target_node_id(val, chunk_id)
+                target_id = self._enum_target_node_id(val)
                 if target_id:
                     hints_out.setdefault(
                         target_id,
@@ -541,7 +529,6 @@ class KTBuilder:
                             "properties": {
                                 "name": target_id,
                                 "class": type(val).__name__[:-4],
-                                "chunk id": chunk_id,
                                 "value": val.value,
                             },
                             "level": 2,
@@ -557,14 +544,13 @@ class KTBuilder:
                             item,
                             node_id,
                             inner_edge_label,
-                            chunk_id,
                             nodes_out,
                             edges_out,
                             hints_out,
                             visited,
                         )
                     elif isinstance(item, Enum):
-                        target_id = self._enum_target_node_id(item, chunk_id)
+                        target_id = self._enum_target_node_id(item)
                         if target_id:
                             hints_out.setdefault(
                                 target_id,
@@ -573,7 +559,6 @@ class KTBuilder:
                                     "properties": {
                                         "name": target_id,
                                         "class": type(item).__name__[:-4],
-                                        "chunk id": chunk_id,
                                         "value": item.value,
                                     },
                                     "level": 2,
@@ -583,9 +568,87 @@ class KTBuilder:
 
         return node_id
 
+    # -------------------------------------------------------------------------
+    # LLM response cache (debug)
+    # -------------------------------------------------------------------------
+    def _llm_response_cache_path(self) -> str:
+        return f"output/chunks/{self.dataset_name}_responses.json"
+
+    def _load_llm_response_cache(self):
+        """
+        Load cached LLM responses from a previous run.
+
+        Detection rule: if `output/chunks/{dataset_name}.txt` exists,
+        we assume a prior construction run happened, and any matching
+        response cache file is restored.  Missing / corrupt cache is
+        treated as a cold start (no error).
+        """
+        chunks_path = f"output/chunks/{self.dataset_name}.txt"
+        if not os.path.exists(chunks_path):
+            logger.info(
+                f"[{self.dataset_name}] No prior chunks file — cold start, "
+                f"LLM will be called for every chunk."
+            )
+            return
+
+        cache_path = self._llm_response_cache_path()
+        if not os.path.exists(cache_path):
+            logger.info(
+                f"[{self.dataset_name}] Chunks file present but no cached "
+                f"responses at {cache_path}; LLM will be called."
+            )
+            return
+
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, dict):
+                raise ValueError(f"Unexpected cache format: {type(data).__name__}")
+            self.llm_responses = {str(k): str(v) for k, v in data.items()}
+            logger.info(
+                f"[{self.dataset_name}] Loaded {len(self.llm_responses)} "
+                f"cached LLM responses from {cache_path}."
+            )
+        except Exception as e:
+            logger.warning(
+                f"[{self.dataset_name}] Failed to load response cache "
+                f"({type(e).__name__}: {e}); starting cold."
+            )
+            self.llm_responses = {}
+
+    def _save_llm_response_cache(self):
+        """Persist the response cache. Safe to call from multiple threads."""
+        cache_path = self._llm_response_cache_path()
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        try:
+            with self._response_cache_lock:
+                snapshot = dict(self.llm_responses)
+
+                tmp = cache_path + ".tmp"
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump(snapshot, f, ensure_ascii=False, indent=2)
+                os.replace(tmp, cache_path)
+        except Exception as e:
+            logger.warning(
+                f"[{self.dataset_name}] Failed to save response cache: "
+                f"{type(e).__name__}: {e}"
+            )
+
     def process_with_pydantic(self, chunk: str, id: str):
         prompt = self._get_construction_prompt(chunk)
-        llm_response = self.extract_with_llm(prompt)
+
+        # ── Response cache: reuse LLM outputs across runs ────────────────
+        if id in self.llm_responses:
+            llm_response = self.llm_responses[id]
+            logger.debug(f"[{id}] Using cached LLM response")
+        else:
+            llm_response = self.extract_with_llm(prompt)
+            with self._response_cache_lock:
+                self.llm_responses[id] = llm_response
+            self._track_tokens(id, prompt, llm_response)
+            # Persist eagerly so a crash mid-run preserves progress.
+            self._save_llm_response_cache()
+
         self._track_tokens(id, prompt, llm_response)
         self.metrics["chunks_total"] += 1
 
@@ -607,7 +670,6 @@ class KTBuilder:
                 val,
                 parent_id=None,
                 edge_label=field_name,
-                chunk_id=id,
                 nodes_out=nodes_out,
                 edges_out=edges_out,
                 hints_out=hints_out,
@@ -615,7 +677,7 @@ class KTBuilder:
             )
 
         with self.lock:
-            self._merge_nodes_and_edges(nodes_out, edges_out, hints_out)
+            self._merge_nodes_and_edges(nodes_out, edges_out, hints_out, chunk_id=id)
 
     # -------------------------------------------------------------------------
     # Graph merge
@@ -626,39 +688,82 @@ class KTBuilder:
         nodes: List[Tuple[str, Dict[str, Any]]],
         edges: List[Tuple[str, str, str]],
         hints: Optional[Dict[str, Dict[str, Any]]] = None,
+        chunk_id: Optional[str] = None,
     ):
         """
         Merge nodes, edges, and enum-target hints into the graph.
 
-        Hints are stub nodes for referenced-but-not-yet-declared enum targets
-        (e.g., `next_master_stage` references `Stage_2_RPC` before the
-        `Stage_2_RPC` model has been walked). Stubs are created ONLY when a
-        node with the same ID is absent, so a real node with richer
-        properties always wins.
+        Provenance rule (做法 B):
+        * Node IDs stay canonical (`{Class}__{value}`) — no chunk namespacing.
+        * Each node carries a `provenance` list accumulating every chunk_id
+            that contributed to it.  Duplicates are suppressed.
+        * Edges also accumulate provenance per (u, v, relation); dedup is
+            still performed later by `triple_deduplicate`, but the list lets
+            you trace which chunks produced a given relation.
+
+        Hints are stub nodes for referenced-but-not-yet-declared canonical
+        targets.  They are created ONLY when a node with the same ID is absent,
+        so a real node with richer properties always wins.
         """
-        # 1) Stub nodes for referenced enums (only if absent).
+        # ── 1) Hints — only if the node doesn't already exist ─────────────────
         for node_id, hint_data in (hints or {}).items():
             if node_id not in self.graph:
                 self.metrics["nodes_emitted"] += 1
+                props = dict(hint_data["properties"])
+                if chunk_id is not None:
+                    props["provenance"] = [chunk_id]
+                hint_data = {**hint_data, "properties": props}
                 self.graph.add_node(node_id, **hint_data)
+            elif chunk_id is not None:
+                self._append_provenance(node_id, chunk_id)
 
-        # 2) Real nodes — merge with existing; incoming wins on "chunk id".
+        # ── 2) Real nodes ─────────────────────────────────────────────────────
         for node_id, node_data in nodes:
             self.metrics["nodes_emitted"] += 1
+
             if node_id in self.graph:
                 existing = self.graph.nodes[node_id].get("properties", {})
                 incoming = node_data["properties"]
+
+                # Merge semantic props: incoming first, existing wins on conflicts
                 merged = {**incoming, **existing}
-                merged["chunk id"] = incoming.get("chunk id", existing.get("chunk id"))
+
+                # Provenance: union of old and new
+                prov = list(existing.get("provenance", []))
+                if chunk_id is not None and chunk_id not in prov:
+                    prov.append(chunk_id)
+                if prov:
+                    merged["provenance"] = prov
+
                 self.graph.nodes[node_id]["properties"] = merged
                 self.graph.nodes[node_id]["level"] = node_data.get("level", 2)
             else:
-                self.graph.add_node(node_id, **node_data)
+                props = dict(node_data["properties"])
+                if chunk_id is not None:
+                    props["provenance"] = [chunk_id]
+                self.graph.add_node(node_id, **{**node_data, "properties": props})
 
-        # 3) Edges.
+        # ── 3) Edges ──────────────────────────────────────────────────────────
+        # MultiDiGraph allows parallel edges; we tag each with the current
+        # chunk_id so dedup can later merge identical (u, v, relation) triples
+        # while keeping a full provenance list.
         for u, v, relation in edges:
             self.metrics["edges_emitted"] += 1
-            self.graph.add_edge(u, v, relation=relation)
+            self.graph.add_edge(
+                u,
+                v,
+                relation=relation,
+                provenance=[chunk_id] if chunk_id is not None else [],
+            )
+
+    def _append_provenance(self, node_id: str, chunk_id: str):
+        """Append chunk_id to a node's provenance list, deduping."""
+        props = self.graph.nodes[node_id].get("properties", {})
+        prov = list(props.get("provenance", []))
+        if chunk_id not in prov:
+            prov.append(chunk_id)
+            props["provenance"] = prov
+            self.graph.nodes[node_id]["properties"] = props
 
     # -------------------------------------------------------------------------
     # Graph walk — legacy paths
@@ -804,7 +909,7 @@ class KTBuilder:
 
         with self.lock:
             self._merge_nodes_and_edges(
-                attr_nodes + triple_nodes, attr_edges + triple_edges
+                attr_nodes + triple_nodes, attr_edges + triple_edges, chunk_id=id
             )
 
     def _process_attributes_agent(
@@ -1033,34 +1138,50 @@ class KTBuilder:
         return True
 
     def _log_graph_stats(self, prefix: str = ""):
-        """Log graph size + node-class distribution, useful in debug."""
         n_nodes = self.graph.number_of_nodes()
         n_edges = self.graph.number_of_edges()
+
         class_counts: Dict[str, int] = {}
         level_counts: Dict[int, int] = {}
+        provenance_lengths: List[int] = []
+
         for _, d in self.graph.nodes(data=True):
             cls = d.get("properties", {}).get("class") or d.get("label", "?")
             class_counts[cls] = class_counts.get(cls, 0) + 1
             lvl = d.get("level", -1)
             level_counts[lvl] = level_counts.get(lvl, 0) + 1
 
+            prov = d.get("properties", {}).get("provenance")
+            if prov:
+                provenance_lengths.append(len(prov))
+
         logger.info(
             f"{prefix}Graph stats: nodes={n_nodes}, edges={n_edges}, "
             f"levels={level_counts}"
         )
-        top_classes = sorted(class_counts.items(), key=lambda x: -x[1])[:8]
-        logger.info(f"{prefix}Top node classes: {top_classes}")
+        logger.info(
+            f"{prefix}Top node classes: "
+            f"{sorted(class_counts.items(), key=lambda x: -x[1])[:8]}"
+        )
 
         degrees = [d for _, d in self.graph.degree()]
         if degrees:
             import statistics
+
             logger.info(
                 f"{prefix}Degree: min={min(degrees)}, "
                 f"median={statistics.median(degrees)}, "
                 f"max={max(degrees)}, "
                 f"isolated={sum(1 for d in degrees if d == 0)}"
             )
-            
+
+        if provenance_lengths:
+            logger.info(
+                f"{prefix}Provenance: nodes_with_prov={len(provenance_lengths)}, "
+                f"max_chunks_per_node={max(provenance_lengths)}, "
+                f"median={statistics.median(provenance_lengths):.1f}"
+            )
+
     # =========================================================================
     # PUBLIC PHASES
     # =========================================================================
@@ -1171,16 +1292,44 @@ class KTBuilder:
     # =========================================================================
 
     def triple_deduplicate(self):
+        """
+        Collapse parallel (u, v, relation) edges into one, merging their
+        `provenance` lists so no contribution history is lost.
+        """
         new_graph = nx.MultiDiGraph()
+
+        # Copy all nodes
         for node, node_data in self.graph.nodes(data=True):
             new_graph.add_node(node, **node_data)
 
-        seen = set()
+        # Group edges by (u, v, relation); union their provenance
+        grouped: Dict[Tuple[str, str, str], List[str]] = {}
+        seen_attrs: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+
         for u, v, key, data in self.graph.edges(keys=True, data=True):
             relation = data.get("relation")
-            if (u, v, relation) not in seen:
-                seen.add((u, v, relation))
-                new_graph.add_edge(u, v, **data)
+            group_key = (u, v, relation)
+
+            prov = list(data.get("provenance", []))
+            if group_key in grouped:
+                for cid in prov:
+                    if cid and cid not in grouped[group_key]:
+                        grouped[group_key].append(cid)
+            else:
+                grouped[group_key] = prov
+                # Keep the first-seen edge's non-provenance, non-relation attributes
+                seen_attrs[group_key] = {
+                    k: val
+                    for k, val in data.items()
+                    if k not in ("provenance", "relation")
+                }
+
+        for (u, v, relation), prov in grouped.items():
+            attrs = dict(seen_attrs.get((u, v, relation), {}))
+            attrs["relation"] = relation
+            attrs["provenance"] = prov
+            new_graph.add_edge(u, v, **attrs)
+
         self.graph = new_graph
 
     def process_level4(self):
@@ -1228,6 +1377,7 @@ class KTBuilder:
                         "properties": u_data["properties"],
                     },
                     "relation": data["relation"],
+                    "provenance": data.get("provenance", []),
                     "end_node": {
                         "label": v_data["label"],
                         "properties": v_data["properties"],

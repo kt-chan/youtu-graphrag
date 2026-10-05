@@ -2,23 +2,18 @@
 M1-Unemployment Debt Recovery SOP — Pydantic v2 Models
 Generated from OWL ontology: m1-unemployment-sop
 
-Usage with LLM extraction (e.g., instructor / OpenAI structured outputs):
-    from instructor import from_openai
-    client = from_openai(OpenAI())
-    result = client.chat.completions.create(
-        response_model=DebtCollectionExtraction,
-        messages=[...]
-    )
+本版为「纯本体层」精简版：移除所有实例层对象（Call / Debtor / Agent /
+Account / FinancialHealthProfile / CallOutcome 三子类），只保留 SOP 骨架，
+并把通话级信号（RFD、结果、合规）上移到本体层节点上。
 """
 
 from __future__ import annotations
 
-from datetime import date, datetime
-from decimal import Decimal
 from enum import Enum
 from typing import Annotated, Any, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
+
 
 # =============================================================================
 # 1. Edge Helper — marks fields as graph relationships
@@ -70,12 +65,27 @@ class ComplianceArtifactEnum(str, Enum):
     """Compliance checkpoints that must be logged during a call."""
 
     REQ_VERIFICATION = "Req_Verification"
-    REQ_MINI_MIRANDA = "Req_MiniMiranda"
+    REQ_FIRST_CONTACT_DISCLOSURE = "Req_Disclosure"
     REQ_EXPLICIT_CONSENT = "Req_ExplicitConsent"
 
 
-class CallOutcomeType(str, Enum):
-    """Discriminator for CallOutcome subclasses."""
+class ObjectionCategoryEnum(str, Enum):
+    """Categories of objections raised by the debtor during a call."""
+
+    FINANCIAL_HARDSHIP = "Objection_Financial_Hardship"
+    DISPUTE_FEE_CONCERN = "Objection_Dispute_Fee_Concern"
+    THIRD_PARTY_APPROVAL = "Objection_Third_Party_Approval"
+    CALL_FREQUENCY_COMPLAINT = "Objection_Call_Frequency_Complaint"
+    OUTRIGHT_REFUSAL = "Objection_Outright_Refusal"
+
+
+class CallOutcomeEnum(str, Enum):
+    """
+    Outcomes a stage can yield.
+
+    Attached to MasterSOPStage.yields_outcome / SubStage.yields_outcome
+    so outcome signals live on the ontology layer instead of a Call object.
+    """
 
     PROMISE_TO_PAY = "PromiseToPay"
     FORBEARANCE_AGREEMENT = "ForbearanceAgreement"
@@ -83,41 +93,15 @@ class CallOutcomeType(str, Enum):
 
 
 # =============================================================================
-# 3. Value Objects (Components) — deduplicated by content
+# 3. Canonical node models — BECOME GRAPH NODES
 # =============================================================================
-
-
-class FinancialHealthProfile(BaseModel):
-    """
-    Assessment of debtor's current liquidity and benefit streams.
-    Captured during SubStage_3_2_FinancialProfiling.
-    """
-
-    model_config = ConfigDict(graph_id_fields=["profileRFD"])
-
-    profile_rfd: RFDEnum = Field(
-        ...,
-        description="Root cause of delinquency identified from this financial profile.",
-        json_schema_extra={"edge_label": "profileRFD"},
-    )
-    is_receiving_ui_benefits: Optional[bool] = Field(
-        None,
-        description="Whether the debtor is receiving unemployment insurance benefits.",
-    )
-    ui_benefit_amount: Optional[Decimal] = Field(
-        None,
-        description="Monthly UI benefit amount (abstracted; do not capture exact values).",
-    )
-    severance_amount: Optional[Decimal] = Field(
-        None,
-        description="Severance payment received (abstracted; do not capture exact values).",
-    )
 
 
 class ComplianceArtifact(BaseModel):
     """
     Mandatory regulatory or audit proof logged during a call.
-    References one of the predefined compliance requirement individuals.
+
+    Canonical node.  Node ID: ComplianceArtifact__{chunk_id}__{artifact_id.value}
     """
 
     model_config = ConfigDict(graph_id_fields=["artifact_id"])
@@ -130,15 +114,18 @@ class ComplianceArtifact(BaseModel):
     )
 
 
-# =============================================================================
-# 4. State Machine Models — SOP topology
-# =============================================================================
-
-
 class MasterSOPStage(BaseModel):
     """
     One of the 7 core stages in the master collection pipeline.
-    Forms a linear progression via nextMasterStage.
+
+    Canonical node.  Node ID: MasterSOPStage__{chunk_id}__{stage_id.value}
+
+    Edges emitted from this node:
+        next_master_stage        → MasterSOPStage
+        branches_to_sub_stage    → SubStage
+        requires_compliance[i]   → ComplianceArtifact
+        handles_rfd[i]           → RFD (property or canonical node)
+        yields_outcome[i]        → CallOutcome (property or canonical node)
     """
 
     model_config = ConfigDict(graph_id_fields=["stage_id"])
@@ -160,12 +147,35 @@ class MasterSOPStage(BaseModel):
         description="Compliance artifacts required at this stage.",
         json_schema_extra={"edge_label": "requiresCompliance"},
     )
+    handles_rfd: list[RFDEnum] = Field(
+        default_factory=list,
+        description=(
+            "RFD categories this stage typically handles. "
+            "For M1-unemployment, use ['RFD_InvoluntaryUnemployment']."
+        ),
+        json_schema_extra={"edge_label": "handlesRFD"},
+    )
+    yields_outcome: list[CallOutcomeEnum] = Field(
+        default_factory=list,
+        description=(
+            "Outcomes this stage typically yields: "
+            "'PromiseToPay', 'ForbearanceAgreement', 'MicroCommitment'."
+        ),
+        json_schema_extra={"edge_label": "yieldsOutcome"},
+    )
 
 
 class SubStage(BaseModel):
     """
     Specialized dialogue sub-states within the M1-Unemployment branch.
-    Flows via nextSubStage, then rejoins the master pipeline.
+
+    Canonical node.  Node ID: SubStage__{chunk_id}__{substage_id.value}
+
+    Edges emitted from this node:
+        next_sub_stage           → SubStage
+        rejoins_master_stage     → MasterSOPStage
+        handles_rfd[i]           → RFD
+        yields_outcome[i]        → CallOutcome
     """
 
     model_config = ConfigDict(graph_id_fields=["substage_id"])
@@ -180,211 +190,67 @@ class SubStage(BaseModel):
         label="rejoinsMasterStage",
         description="Which master stage this sub-flow routes back into.",
     )
-
-
-# =============================================================================
-# 5. Outcome Models — discriminated union
-# =============================================================================
-
-
-class PromiseToPay(BaseModel):
-    """Binding commitment to pay a specified amount on a future date."""
-
-    outcome_type: Literal["PromiseToPay"] = "PromiseToPay"
-    ptp_amount: Optional[Decimal] = Field(
-        None,
-        description="Promised payment amount (abstract; avoid capturing raw values).",
-    )
-    ptp_due_date: Optional[date] = Field(
-        None, description="Date the payment was promised for."
-    )
-    is_auto_pay_configured: Optional[bool] = Field(
-        None, description="Whether auto-pay was set up as part of the PTP."
-    )
-
-
-class ForbearanceAgreement(BaseModel):
-    """Temporary hold or restructuring granted due to unemployment hardship."""
-
-    outcome_type: Literal["ForbearanceAgreement"] = "ForbearanceAgreement"
-    forbearance_duration_days: Optional[int] = Field(
-        None, description="Duration of the forbearance period in days."
-    )
-    restructured_terms: Optional[str] = Field(
-        None, description="Brief description of restructured terms (abstracted)."
-    )
-
-
-class MicroCommitment(BaseModel):
-    """Non-monetary agreement, e.g., agreeing to provide a job status update."""
-
-    outcome_type: Literal["MicroCommitment"] = "MicroCommitment"
-    commitment_description: Optional[str] = Field(
-        None, description="What the debtor agreed to do (non-monetary)."
-    )
-    follow_up_date: Optional[date] = Field(
-        None, description="When the micro-commitment is expected to be fulfilled."
-    )
-
-
-CallOutcome = Annotated[
-    Union[PromiseToPay, ForbearanceAgreement, MicroCommitment],
-    Field(discriminator="outcome_type"),
-]
-
-
-# =============================================================================
-# 6. Core Entity Models
-# =============================================================================
-
-
-class DebtAccount(BaseModel):
-    """The financial obligation record subject to collection."""
-
-    model_config = ConfigDict(graph_id_fields=["account_id"])
-
-    account_id: str = Field(
-        ...,
-        description="Anonymous account identifier (use placeholder, not real account number).",
-    )
-    account_number: Optional[str] = Field(
-        None, description="Account number — **avoid populating with real values**."
-    )
-    outstanding_balance: Optional[Decimal] = Field(
-        None,
-        description="Outstanding balance — **abstract or leave null for PII safety**.",
-    )
-    days_past_due: Optional[int] = Field(
-        None, description="Number of days the account is past due."
-    )
-    delinquency_stage: Literal["M1"] = Field(
-        "M1", description="Delinquency bucket; expected 'M1' for 1-30 DPD."
-    )
-
-
-class Debtor(BaseModel):
-    """An individual owing an outstanding debt in early-stage (M1) delinquency."""
-
-    model_config = ConfigDict(graph_id_fields=["debtor_id"])
-
-    debtor_id: str = Field(
-        ..., description="Anonymous debtor identifier (e.g., 'Debtor_Anonymous')."
-    )
-    label: Optional[str] = Field(None, description="Optional label — avoid real names.")
-    has_account: list[DebtAccount] = Field(
+    handles_rfd: list[RFDEnum] = Field(
         default_factory=list,
-        description="Accounts held by this debtor.",
-        json_schema_extra={"edge_label": "hasAccount"},
+        description="RFD categories this sub-stage typically handles.",
+        json_schema_extra={"edge_label": "handlesRFD"},
     )
-    has_financial_profile: Optional[FinancialHealthProfile] = Edge(
-        label="hasFinancialProfile",
-        description="The debtor's financial health profile.",
-    )
-    experiences_hardship: Optional[RFDEnum] = Edge(
-        label="experiencesHardship",
-        description="Hardship reason experienced by the debtor.",
+    yields_outcome: list[CallOutcomeEnum] = Field(
+        default_factory=list,
+        description="Outcomes this sub-stage typically yields.",
+        json_schema_extra={"edge_label": "yieldsOutcome"},
     )
 
-    @field_validator("debtor_id")
-    @classmethod
-    def anonymize_id(cls, v: str) -> str:
-        """Ensure the ID is treated as anonymous."""
-        return v.strip()
+
+# =============================================================================
+# 4. ObjectionCategory — kept for backward compatibility
+# =============================================================================
+# Prompt 目前不要求输出 objections；保留该类以便 prompt 后续扩展时无需改模型。
+# 若要启用，在 prompt 中加入 objections 字段并重新构建 checkpoint。
 
 
-class CollectionAgent(BaseModel):
-    """Human collector or automated dialogue bot conducting the interaction."""
-
-    model_config = ConfigDict(graph_id_fields=["agent_id"])
-
-    agent_id: str = Field(
-        ..., description="Anonymous agent identifier (e.g., 'Agent_Anonymous')."
-    )
-    label: Optional[str] = Field(None, description="Optional label.")
-
-
-class Call(BaseModel):
+class ObjectionCategory(BaseModel):
     """
-    A specific telecommunication dialogue session between an Agent and a Debtor.
-    The central execution entity linking all other nodes.
+    A category of objection raised during the call.
+
+    Node ID: ObjectionCategory__{chunk_id}__{objection_id.value}
+
+    Edge emitted from this node:
+        triggered_in_stage → MasterSOPStage
     """
 
-    model_config = ConfigDict(graph_id_fields=["call_id"])
+    model_config = ConfigDict(graph_id_fields=["objection_id"])
 
-    call_id: str = Field(..., description="Unique anonymous call identifier.")
-
-    # --- Actor & Account Links ---
-    conducted_by_agent: Optional[CollectionAgent] = Edge(
-        label="conductedByAgent",
-        description="The agent who conducted this call.",
+    objection_id: ObjectionCategoryEnum = Field(
+        ..., description="Which objection category was raised."
     )
-    has_debtor_participant: Optional[Debtor] = Edge(
-        label="hasDebtorParticipant",
-        description="The debtor who participated in this call.",
+    label: Optional[str] = Field(
+        None, description="Descriptive label for the objection."
     )
-    concerns_account: Optional[DebtAccount] = Edge(
-        label="concernsAccount",
-        description="The debt account this call concerns.",
-    )
-
-    # --- Financial & Hardship Links ---
-    evaluated_financials: Optional[FinancialHealthProfile] = Edge(
-        label="evaluatedFinancials",
-        description="Financial health profile evaluated during this call.",
-    )
-    detected_rfd: Optional[RFDEnum] = Edge(
-        label="detectedRFD",
-        description="Reason for Delinquency detected during this call.",
-    )
-
-    # --- SOP Progression ---
-    current_master_stage: Optional[MasterSOPStageEnum] = Edge(
-        label="currentMasterStage",
-        description="The real-time master SOP stage of the ongoing call.",
-    )
-    current_sub_stage: Optional[SubStageEnum] = Edge(
-        label="currentSubStage",
-        description="The real-time sub-stage (if in M1-Unemployment branch).",
-    )
-
-    # --- Compliance ---
-    logged_compliance: list[ComplianceArtifactEnum] = Field(
-        default_factory=list,
-        description="Compliance checkpoints satisfied during this call.",
-        json_schema_extra={"edge_label": "loggedCompliance"},
-    )
-
-    # --- Outcome ---
-    yielded_outcome: Optional[CallOutcome] = Edge(
-        label="yieldedOutcome",
-        description="Formal resolution or commitment resulting from this call.",
-    )
-
-    # --- Call Meta ---
-    call_start_time: Optional[datetime] = Field(
-        None, description="Call start timestamp."
-    )
-    call_end_time: Optional[datetime] = Field(None, description="Call end timestamp.")
-    is_verification_passed: Optional[bool] = Field(
-        None, description="Whether right-party verification passed."
+    triggered_in_stage: Optional[MasterSOPStageEnum] = Edge(
+        label="triggeredInStage",
+        description="Master SOP stage where this objection was triggered.",
     )
 
 
 # =============================================================================
-# 7. Root Extraction Model
+# 5. Root Extraction Model — ontology layer only
 # =============================================================================
 
 
 class DebtCollectionExtraction(BaseModel):
     """
     Root model for LLM extraction from a single M1-Unemployment debt collection call.
-    Captures the full connected graph: Call, Debtor, Account, Financial Profile,
-    SOP stages, compliance artifacts, and outcome.
+
+    本版根模型**只有三个字段**，对应本体层的三类规范节点：
+      * master_stages        — 主 SOP 阶段链
+      * sub_stages           — M1-失业子流程
+      * compliance_artifacts — 合规检查点
+
+    通话级信号（RFD、结果、合规）已上移到各节点的 handles_rfd /
+    yields_outcome / requires_compliance 字段上，因此不再需要 call 对象。
     """
 
-    call: Call = Field(
-        ..., description="The primary call entity extracted from the dialogue."
-    )
     master_stages: list[MasterSOPStage] = Field(
         default_factory=list,
         description="Master SOP stages referenced or traversed during the call.",

@@ -520,12 +520,12 @@ async def construct_graph(
                 status_code=503,
                 detail="GraphRAG components not available. Please install or configure them.",
             )
-            
+
         # Initialize config
         global config
         if config is None:
             config = get_config("config/base_config.yaml")
-            
+
         dataset_name = request.dataset_name
 
         await send_progress_update(
@@ -555,8 +555,6 @@ async def construct_graph(
         await send_progress_update(
             client_id, "construction", 10, "Loading configuration and corpus..."
         )
-
-
 
         # Initialize KTBuilder
         builder = constructor.KTBuilder(
@@ -672,7 +670,7 @@ def convert_graphrag_format(graph_data: List) -> Dict:
             if start_id and start_id not in nodes_dict:
                 nodes_dict[start_id] = {
                     "id": start_id,
-                    "name": start_id[:30],
+                    "name": start_id[:200],
                     "category": start_node.get("properties", {}).get(
                         "schema_type", start_node.get("label", "entity")
                     ),
@@ -686,7 +684,7 @@ def convert_graphrag_format(graph_data: List) -> Dict:
             if end_id and end_id not in nodes_dict:
                 nodes_dict[end_id] = {
                     "id": end_id,
-                    "name": end_id[:30],
+                    "name": end_id[:200],
                     "category": end_node.get("properties", {}).get(
                         "schema_type", end_node.get("label", "entity")
                     ),
@@ -756,7 +754,7 @@ def convert_standard_format(graph_data: Dict) -> Dict:
         nodes.append(
             {
                 "id": node.get("id", ""),
-                "name": node.get("name", node.get("id", ""))[:30],
+                "name": node.get("name", node.get("id", ""))[:200],
                 "category": node.get("type", "entity"),
                 "value": len(node.get("attributes", [])),
                 "symbolSize": min(
@@ -1011,8 +1009,12 @@ async def ask_question(request: QuestionRequest, client_id: str = "default"):
         # start; leading whitespace is tolerated; both ASCII ":" and fullwidth
         # "：" are accepted. This prevents prompt-template echoes such as
         # "...以新段落 `FINAL_ANSWER:` 开头..." from being treated as output.
-        FINAL_MARKER_RE = re.compile(r"(?m)^[ \t]*FINAL_ANSWER\b[ \t]*[:：]?")
-        NEW_QUERY_MARKER_RE = re.compile(r"(?m)^[ \t]*NEW_QUERIES\b[ \t]*[:：]?")
+        FINAL_MARKER_RE = re.compile(
+            r"(?m)^[ \t]*(?:[#*_]+[ \t]*)*FINAL_ANSWER\b[^\n]*$"
+        )
+        NEW_QUERY_MARKER_RE = re.compile(
+            r"(?m)^[ \t]*(?:[#*_]+[ \t]*)*NEW_QUERIES\b[^\n]*$"
+        )
 
         def _build_context():
             triples = _dedup(list(all_triples))
@@ -1027,28 +1029,40 @@ async def ask_question(request: QuestionRequest, client_id: str = "default"):
             return ctx, triples, chunk_ids, chunk_contents
 
         def _extract_final_answer(text: str) -> Optional[str]:
-            m = FINAL_MARKER_RE.search(text)
-            if m is None:
+            matches = list(FINAL_MARKER_RE.finditer(text))
+            if not matches:
                 return None
+            m = matches[-1]  # or matches[0] — see note below
             start = m.end()
             later_new = NEW_QUERY_MARKER_RE.search(text, pos=start)
             end = later_new.start() if later_new is not None else len(text)
             return text[start:end].strip() or text
 
         def _parse_new_queries(text: str, exclude: str) -> List[str]:
-            m = NEW_QUERY_MARKER_RE.search(text)
-            if m is None:
+            matches = list(NEW_QUERY_MARKER_RE.finditer(text))
+            if not matches:
                 return []
-            after = text[m.end():]
-            later_final = FINAL_MARKER_RE.search(after)
-            if later_final is not None:
-                after = after[: later_final.start()]
+            m = matches[-1]  # or matches[0]
+            after = text[m.end() :]
+
+            # cut at the next marker of either kind (handles a second NEW_QUERIES
+            # block, or a FINAL_ANSWER block, so they don't leak in)
+            for pat in (NEW_QUERY_MARKER_RE, FINAL_MARKER_RE):
+                nxt = pat.search(after)
+                if nxt is not None:
+                    after = after[: nxt.start()]
+
             out: List[str] = []
             for line in after.splitlines():
                 c = line.strip()
                 if not c or c == ":":
                     continue
-                # Strip bullet / numbered list prefixes
+                # drop markdown separators BEFORE bullet strip, else "---" -> "--"
+                if re.fullmatch(r"[-\*_=~]{3,}", c):
+                    continue
+                # defensive: skip any marker line
+                if NEW_QUERY_MARKER_RE.match(c) or FINAL_MARKER_RE.match(c):
+                    continue
                 c = re.sub(r"^[\-\*\u2022]\s*", "", c)
                 c = re.sub(r"^\d+[\.\)]\s*", "", c)
                 c = c.strip().strip('"').strip("'").strip()
@@ -1121,62 +1135,7 @@ async def ask_question(request: QuestionRequest, client_id: str = "default"):
         # -------- If NEW_QUERIES: batch-retrieve + ONE final LLM call --------
         if final_answer is None and new_queries:
             current_query = " | ".join(new_queries)
-
-            await send_progress_update(
-                client_id,
-                "retrieval",
-                85,
-                f"Retrieving {len(new_queries)} follow-up quer"
-                f"{'y' if len(new_queries) == 1 else 'ies'}...",
-            )
-
-            try:
-
-                def _run_more_retrieval(queries=tuple(new_queries)):
-                    """Run process_retrieval_results for EVERY new query in one batch."""
-                    batch = []
-                    for q in queries:
-                        try:
-                            res, q_elapsed = kt_retriever.process_retrieval_results(
-                                q, top_k=config.retrieval.top_k_filter
-                            )
-                            batch.append((q, res, q_elapsed))
-                        except Exception as inner_e:
-                            logger.error(
-                                f"Follow-up retrieval failed for query '{q}': {inner_e}"
-                            )
-                    return batch
-
-                batch_results = await loop.run_in_executor(
-                    None, _run_more_retrieval
-                )
-
-                for _q, new_ret, _q_elapsed in batch_results:
-                    new_triples = new_ret.get("triples", []) or []
-                    new_chunk_ids = new_ret.get("chunk_ids", []) or []
-                    new_chunk_contents = new_ret.get("chunk_contents", []) or []
-                    if isinstance(new_chunk_contents, dict):
-                        for cid, ctext in new_chunk_contents.items():
-                            all_chunk_contents[cid] = ctext
-                    else:
-                        for i_c, cid in enumerate(new_chunk_ids):
-                            if i_c < len(new_chunk_contents):
-                                all_chunk_contents[cid] = new_chunk_contents[i_c]
-                    all_triples.update(new_triples)
-                    all_chunk_ids.update(new_chunk_ids)
-            except Exception as e:
-                logger.error(f"Follow-up retrieval failed: {e}")
-
-            # -------- LLM call #2: final answer with enriched context --------
-            await send_progress_update(
-                client_id, "retrieval", 92, "Generating final answer..."
-            )
-            ctx2, t2, ids2, cc2 = _build_context()
-            final_reasoning = await _llm_call(current_query, ctx2, step=2)
-            _record_step(current_query, t2, ids2, cc2, final_reasoning)
-
-            extracted = _extract_final_answer(final_reasoning)
-            final_answer = extracted if extracted is not None else final_reasoning
+            final_answer = current_query
 
         if final_answer is None:
             final_answer = reasoning or "Unable to generate an answer."
@@ -1262,7 +1221,7 @@ def prepare_subquery_visualization(
         nodes.append(
             {
                 "id": sub_id,
-                "name": sub_q.get("sub-question", "")[:20] + "...",
+                "name": sub_q.get("sub-question", "")[:200] + "...",
                 "category": "sub_question",
                 "symbolSize": 30,
             }
@@ -1301,7 +1260,7 @@ def prepare_retrieved_graph_visualization(triples: List[str]) -> Dict:
                             nodes.append(
                                 {
                                     "id": str(entity),
-                                    "name": str(entity)[:20],
+                                    "name": str(entity)[:200],
                                     "category": "entity",
                                     "symbolSize": 20,
                                 }
