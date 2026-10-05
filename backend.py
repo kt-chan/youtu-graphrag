@@ -520,6 +520,12 @@ async def construct_graph(
                 status_code=503,
                 detail="GraphRAG components not available. Please install or configure them.",
             )
+            
+        # Initialize config
+        global config
+        if config is None:
+            config = get_config("config/base_config.yaml")
+            
         dataset_name = request.dataset_name
 
         await send_progress_update(
@@ -527,7 +533,8 @@ async def construct_graph(
         )
 
         # Clear all cache files before construction
-        await clear_cache_files(dataset_name)
+        if not config.system.debug:
+            await clear_cache_files(dataset_name)
 
         await send_progress_update(
             client_id, "construction", 5, "Initializing graph builder..."
@@ -549,10 +556,7 @@ async def construct_graph(
             client_id, "construction", 10, "Loading configuration and corpus..."
         )
 
-        # Initialize config
-        global config
-        if config is None:
-            config = get_config("config/base_config.yaml")
+
 
         # Initialize KTBuilder
         builder = constructor.KTBuilder(

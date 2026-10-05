@@ -2346,64 +2346,76 @@
             console.log('Parsing', triples.length, 'triples...');
 
             triples.forEach((tripleStr, index) => {
-                // Parse triple format: (subject, relation, object) [score: X.XXX]
-                const match = tripleStr.match(/\(([^,]+),\s*([^,]+),\s*([^)]+)\)/);
-                if (match) {
-                    if (index < 3) {
-                        console.log(`Triple ${index + 1} parsed successfully:`, match.slice(1));
-                    }
-                    let [, subject, relation, object] = match;
+                // Parse triple format: (subject, relation, object [description]) [members: ...] [score: X.XXX]
+                const re = /\((?<subject>[^,]+),\s*(?<relation>[^,]+),\s*(?<object>\S.*?)(?:\s*\[members:\s*(?<members>[^\]]*)\])?\s*\)\s*\[score:\s*(?<score>[\d.]+)\]/;
+                const match = tripleStr.match(re);
 
-                    // Clean up entity names and extract schema types
-                    subject = subject.trim();
-                    relation = relation.trim();
-                    object = object.trim();
+                if (!match) return;
 
-                    // Extract schema type if present
-                    const subjectType = extractSchemaType(subject) || 'entity';
-                    const objectType = extractSchemaType(object) || 'entity';
-
-                    // Clean entity names
-                    subject = cleanEntityName(subject);
-                    object = cleanEntityName(object);
-
-                    // Add nodes
-                    if (!nodes.has(subject)) {
-                        nodes.set(subject, {
-                            id: subject,
-                            name: truncateWords(subject),
-                            category: subjectType,
-                            symbolSize: Math.min(30 + subject.length * 0.5, 50),
-                            itemStyle: { color: getCategoryColor(subjectType) },
-                            rawName: subject
-                        });
-                        categories.add(subjectType);
-                    }
-
-                    if (!nodes.has(object)) {
-                        nodes.set(object, {
-                            id: object,
-                            name: truncateWords(object),
-                            category: objectType,
-                            symbolSize: Math.min(30 + object.length * 0.5, 50),
-                            itemStyle: { color: getCategoryColor(objectType) },
-                            rawName: object
-                        });
-                        categories.add(objectType);
-                    }
-
-                    // Add link with truncated display name and rawName preserved
-                    links.push({
-                        source: subject,
-                        target: object,
-                        name: truncateWords(relation),
-                        rawName: relation,
-                        lineStyle: {
-                            color: '#6b73ff',
-                            width: 2
-                        }
-                    });
+                if (index < 3) {
+                    console.log(`Triple ${index + 1} parsed successfully:`, match.slice(1));
                 }
+
+                const g = match.groups || {};
+
+                const result = {
+                    subject: (g.subject ?? '').trim(),
+                    relation: (g.relation ?? '').trim(),
+                    object: (g.object ?? '').trim(),
+                    description: (g.object_description ?? '').trim(),
+                    members: (g.members ?? '').split(',').map(s => s.trim()).filter(Boolean),
+                    score: parseFloat(g.score) || 0,
+                };
+
+                // Extract schema types BEFORE cleaning names
+                const subjectType = extractSchemaType(result.subject) || 'entity';
+                const objectType = extractSchemaType(result.object) || 'entity';
+
+                // Clean entity names
+                const subject = cleanEntityName(result.subject);
+                const object = cleanEntityName(result.object);
+                const relation = result.relation;
+
+                // Add nodes
+                if (!nodes.has(subject)) {
+                    nodes.set(subject, {
+                        id: subject,
+                        name: truncateWords(subject),
+                        category: subjectType,
+                        symbolSize: Math.min(30 + subject.length * 0.5, 50),
+                        itemStyle: { color: getCategoryColor(subjectType) },
+                        rawName: subject
+                    });
+                    categories.add(subjectType);
+                }
+
+                if (!nodes.has(object)) {
+                    nodes.set(object, {
+                        id: object,
+                        name: truncateWords(object),
+                        category: objectType,
+                        symbolSize: Math.min(30 + object.length * 0.5, 50),
+                        itemStyle: { color: getCategoryColor(objectType) },
+                        rawName: object
+                    });
+                    categories.add(objectType);
+                }
+
+                // Add link
+                links.push({
+                    source: subject,
+                    target: object,
+                    name: truncateWords(relation),
+                    rawName: relation,
+                    // optionally carry description + members + score through for tooltips:
+                    description: result.description,
+                    members: result.members,
+                    score: result.score,
+                    lineStyle: {
+                        color: '#6b73ff',
+                        width: 2
+                    }
+                });
             });
 
             const nodesList = Array.from(nodes.values());

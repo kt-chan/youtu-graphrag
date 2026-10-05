@@ -11,6 +11,11 @@ import yaml
 
 from utils.logger import logger
 
+@dataclass
+class SystemConfig:
+    """Dataset configuration for a specific dataset"""
+    debug: bool = False
+    skip_postprocess: bool = False
 
 @dataclass
 class DatasetConfig:
@@ -141,6 +146,7 @@ class ConfigManager:
         """
         self.config_path = config_path or self._get_default_config_path()
         self.config_data: Dict[str, Any] = {}
+        self.system: Optional[SystemConfig] = None
         self.datasets: Dict[str, DatasetConfig] = {}
         self.triggers: Optional[TriggersConfig] = None
         self.construction: Optional[ConstructionConfig] = None
@@ -180,6 +186,8 @@ class ConfigManager:
     
     def _parse_config(self) -> None:
         """Parse the loaded configuration data into structured objects."""
+        self.system = SystemConfig(**self.config_data.get("system", {}))
+        
         datasets_data = self.config_data.get("datasets", {})
         self.datasets = {
             name: DatasetConfig(**config) 
@@ -226,7 +234,7 @@ class ConfigManager:
             if not os.path.exists(dataset_config.schema_path):
                 logger.warning(f"Schema path not found for {dataset_name}: {dataset_config.schema_path}")
         
-        valid_modes = ["agent", "noagent"]
+        valid_modes = ["pydantic", "agent", "noagent"]
         if self.triggers.mode not in valid_modes:
             raise ValueError(f"Invalid mode: {self.triggers.mode}. Must be one of {valid_modes}")
         

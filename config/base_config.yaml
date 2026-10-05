@@ -1,4 +1,8 @@
 # base_config.yaml
+system:
+  debug: true
+  skip_postprocess: false
+
 construction:
   chunk_size: 5000
   datasets_no_chunk:
@@ -10,8 +14,8 @@ construction:
   - annoy_eng
   - demo
   - debt_collection
-  max_workers: 32
-  mode: agent  # set noagent to speed up
+  max_workers: 10
+  mode: pydantic  # set noagent to speed up
   overlap: 200
   tree_comm:
     embedding_model: all-MiniLM-L6-v2
@@ -185,8 +189,309 @@ prompts:
       : {{\n    \"PERSON#1\": \"person\",\n    \"LOCATION#1\": \"location\"\n  }},\n\
       \  \"new_schema_types\": {{\n      \"nodes\": [\"Instrument\"],\n      \"relations\"\
       : [\"owns\"],\n      \"attributes\": [\"skill_level\"]\n  }}\n}}\n"
-    debt_collection: "你是信用卡外呼催收对话信息提取专家。请根据催收通话内容，参考以下债务催收本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板、合规规则等关键信息，并严格按照示例返回 JSON 格式。\n\n催收对话内容:\n```{chunk}```\n\n参考 schema:\n```{schema}```\n\n要求：\n1. 识别对话阶段（如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing）。\n2. 识别债务人画像（如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial）。\n3. 识别异议类别（如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal）。\n4. 识别说服策略（如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management）。\n5. 提取话术模板与合规规则（如 FDCPA Mini-Miranda、录音告知、不威胁等）。\n6. 实体名称严格使用对话中的表述，不要自行推理创造。\n7. 根据提供的 schema 为每个实体分配正确的类型。\n\n注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。\n\n示例输出，包括属性、三元组及实体类型：\n{{\n  \"attributes\": {{\n    \"Call_2317941550352385028\": [\"call_date: 20260506\", \"talk_time: 613\", \"overdue_bucket: M1\"]\n  }},\n  \"triples\": [\n    [\"Call_2317941550352385028\", \"has_next_stage\", \"Stage_Opening_Verification\"],\n    [\"Stage_Hardship_Exploration\", \"triggered_in_stage\", \"Objection_Financial_Hardship\"],\n    [\"Persona_Worried\", \"susceptible_to\", \"Strategy_Reciprocity\"]\n  ],\n  \"entity_types\": {{\n    \"Call_2317941550352385028\": \"collection_call\",\n    \"Stage_Opening_Verification\": \"dialogue_stage\",\n    \"Objection_Financial_Hardship\": \"objection_category\",\n    \"Persona_Worried\": \"debtor_persona\",\n    \"Strategy_Reciprocity\": \"persuasion_strategy\"\n  }}\n}}\n"
-    debt_collection_agent: "你是信用卡外呼催收对话信息提取专家。请根据催收通话内容，参考以下债务催收本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板、合规规则等关键信息，并严格按照示例返回 JSON 格式。\n\n催收对话内容:\n```{chunk}```\n\n参考 schema:\n```{schema}```\n\n要求：\n1. 识别对话阶段（如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing）。\n2. 识别债务人画像（如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial）。\n3. 识别异议类别（如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal）。\n4. 识别说服策略（如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management）。\n5. 提取话术模板与合规规则（如 FDCPA Mini-Miranda、录音告知、不威胁等）。\n6. 实体名称严格使用对话中的表述，不要自行推理创造。\n7. 根据提供的 schema 为每个实体分配正确的类型。\n\n模式演化：如果你发现新的重要实体类型、关系类型或属性类型对知识提取有价值，请将它们包含在 \"new_schema_types\" 字段中。注意，添加新模式的严格阈值是 0.9，需要考虑重要性和与现有模式的相似性。\n\n注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。\n\n示例输出，包括属性、三元组、实体类型及新模式类型：\n{{\n  \"attributes\": {{\n    \"Call_2317941550352385028\": [\"call_date: 20260506\", \"talk_time: 613\", \"overdue_bucket: M1\"]\n  }},\n  \"triples\": [\n    [\"Call_2317941550352385028\", \"has_next_stage\", \"Stage_Opening_Verification\"],\n    [\"Stage_Hardship_Exploration\", \"triggered_in_stage\", \"Objection_Financial_Hardship\"],\n    [\"Persona_Worried\", \"susceptible_to\", \"Strategy_Reciprocity\"]\n  ],\n  \"entity_types\": {{\n    \"Call_2317941550352385028\": \"collection_call\",\n    \"Stage_Opening_Verification\": \"dialogue_stage\",\n    \"Objection_Financial_Hardship\": \"objection_category\",\n    \"Persona_Worried\": \"debtor_persona\",\n    \"Strategy_Reciprocity\": \"persuasion_strategy\"\n  }},\n  \"new_schema_types\": {{\n      \"nodes\": [\"payment_plan\"],\n      \"relations\": [\"agreed_to\"],\n      \"attributes\": [\"installment_count\"]\n  }}\n}}\n"
+    debt_collection:   |
+      你是信用卡外呼催收对话信息提取专家。请根据催收通话内容，参考以下债务催收本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板、合规规则等关键信息，并严格按照示例返回 JSON 格式。
+
+      催收对话内容:
+      `{chunk}`
+
+      参考 schema:
+      `{schema}`
+
+      要求：
+
+      1. 识别对话阶段（如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing）。
+      2. 识别债务人画像（如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial）。
+      3. 识别异议类别（如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal）。
+      4. 识别说服策略（如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management）。
+      5. 提取话术模板与合规规则（如 FDCPA Mini-Miranda、录音告知、不威胁等）。
+      6. **【核心限制：仅限 Schema 抽象概念】在提取实体类型和关系时，绝对禁止提取具体的客户身份信息（如客户姓名、电话、身份证号、具体账户）和具体的支付细节（如具体金额数值、具体还款日期）。必须强制将信息抽象为 Schema 概念级别。**
+      7. 实体名称应直接使用 Schema 中定义的规范类别名称或抽象概念标签（例如使用 `Objection_Financial_Hardship` 代替“我被裁员了”；使用 `Commitment_PTP` 代替“明天转500”），禁止将对话中包含具体隐私或金额的原话提取为实体。
+      8. 根据提供的 schema 为每个实体分配正确的类型。
+
+      注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。
+
+      示例输出，包括属性、三元组、实体类型及新模式类型：
+      {{
+      "attributes": {{
+      "Call_2317941550352385028": ["call_date: 20260506", "talk_time: 613", "overdue_bucket: M1"]
+      }},
+      "triples": [
+      ["Call_2317941550352385028", "has_next_stage", "Stage_Opening_Verification"],
+      ["Stage_Hardship_Exploration", "triggered_in_stage", "Objection_Financial_Hardship"],
+      ["Persona_Worried", "susceptible_to", "Strategy_Reciprocity"]
+      ],
+      "entity_types": {{
+      "Call_2317941550352385028": "collection_call",
+      "Stage_Opening_Verification": "dialogue_stage",
+      "Objection_Financial_Hardship": "objection_category",
+      "Persona_Worried": "debtor_persona",
+      "Strategy_Reciprocity": "persuasion_strategy"
+      }}
+      }}
+
+    debt_collection_agent:    |
+      你是中国银行业信用卡外呼催收对话 SOP 挖掘专家，专注于 M1 阶段（逾期 1-30 天）失业类债务人的催收标准作业流程提取。请根据文末提供的催收通话内容，并参考以下 DCSPO（Debt Collection Sales Pitch Ontology）本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板等关键信息，并重点挖掘 SOP 步骤、决策点与失业场景应对策略，严格按照示例返回 JSON 格式。
+
+      参考 schema（重要：最大限度使用本体中已定义的类与关系）:
+      `{schema}`
+
+
+      要求：
+
+      1. 识别对话阶段（DialogueStage 实例，如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing），并用 `hasNextStage` 表达阶段顺序。
+      2. 识别债务人画像（DebtorPersona 实例，如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial），并用 `susceptibleTo` 关联到 PersuasionStrategy。
+      3. 识别异议类别（ObjectionCategory 实例，如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal），**重点关注失业导致的财务困难**；用 `triggeredInStage` 关联到 DialogueStage，用 `resolvedBy` 关联到 PersuasionStrategy。
+      4. 识别说服策略（PersuasionStrategy 实例，如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management），用 `instantiates` 关联到 SalesPitchTemplate，用 `alignsWithPersona` 关联到 DebtorPersona。
+      5. 提取话术模板（SalesPitchTemplate 实例）与合规规则（ComplianceRule 实例）；合规通过 `requiresCompliance`（DialogueStage → ComplianceRule）、`governsStage`、`restrictsStrategy` 表达，**不使用任何未在本体中定义的合规引用关系**。
+      6. **【SOP 挖掘核心】** 提取 M1 阶段失业类债务人的标准作业流程，包括：
+         - 失业状态确认与核实
+         - 还款意愿与还款能力评估
+         - 可提供的援助方案（延期、分期、减免）及适用条件
+         - 承诺还款（PTP，PaymentCommitment 实例）的获取与确认
+         - 后续跟进安排与时间节点（SystemEvent 实例，用 `precedes` / `follows` 表达顺序）
+         - 升级或转接条件
+         注意：DCSPO 本体未定义专门的 SOP 类与关系，如确有价值可放入 `new_schema_types`（见第 11 条）。
+      7. 失业场景使用 `dcspo:hasHardship` 关联债务人（Debtor）与 HardshipEvent；`causedBy` 表达异议或困难的成因。
+      8. **【核心限制：仅限 Schema 抽象概念】** 提取实体类型和关系时，绝对禁止提取具体的客户身份信息（姓名、电话、身份证号、具体账户）和具体的支付细节（金额数值、还款日期）。必须强制抽象到 Schema 概念级别。
+      9. 实体名称应直接使用 DCSPO 中定义的规范类别名称或抽象概念标签（例如使用 `Objection_Financial_Hardship` 代替“我被裁员了”；使用 `Commitment_PTP` 代替“明天转500”），禁止将对话中包含具体隐私或金额的原话提取为实体。
+      10. 根据 DCSPO 本体为每个实体分配正确的类型；triples 中的关系名必须严格来自上述 31 个对象属性。
+      11. 模式演化：若发现新的重要实体类型、关系类型或属性类型对 SOP 挖掘有价值，请放入 `new_schema_types`。严格阈值 0.9，须同时满足重要性与与现有模式的低相似性。
+
+      注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。
+
+      示例输出（含属性、SOP 步骤、三元组、实体类型及新模式类型；JSON 花括号已转义）：
+      {{
+      "attributes": {{
+      "Call_2317941550352385028": [
+      "callId: 2317941550352385028",
+      "callDate: 20260506",
+      "talkTime: 613",
+      "overdueBucket: M1"
+      ]
+      }},
+      "sop_steps": [
+      "确认失业状态",
+      "评估还款意愿与能力",
+      "提供延期/分期/减免方案",
+      "获取 PTP 承诺",
+      "安排后续跟进"
+      ],
+      "triples": [
+      ["Call_2317941550352385028", "hasNextStage", "Stage_Opening_Verification"],
+      ["Call_2317941550352385028", "targetsDebtor", "Debtor_Anonymous"],
+      ["Call_2317941550352385028", "requiresCompliance", "Compliance_Recording_Notice"],
+      ["Debtor_Anonymous", "hasHardship", "Hardship_Unemployment"],
+      ["Debtor_Anonymous", "exhibitsTrait", "Persona_Worried"],
+      ["Objection_Financial_Hardship", "triggeredInStage", "Stage_Hardship_Exploration"],
+      ["Objection_Financial_Hardship", "resolvedBy", "Strategy_Reciprocity"],
+      ["Persona_Worried", "susceptibleTo", "Strategy_Reciprocity"],
+      ["Strategy_Reciprocity", "instantiates", "Template_Empathy_Then_Option"],
+      ["Template_Empathy_Then_Option", "addressesObjection", "Objection_Financial_Hardship"],
+      ["Strategy_Reciprocity", "alignsWithPersona", "Persona_Worried"],
+      ["Call_2317941550352385028", "agreedTo", "Commitment_PTP"]
+      ],
+      "entity_types": {{
+      "Call_2317941550352385028": "collection_call",
+      "Stage_Opening_Verification": "dialogue_stage",
+      "Stage_Hardship_Exploration": "dialogue_stage",
+      "Debtor_Anonymous": "debtor",
+      "Persona_Worried": "debtor_persona",
+      "Objection_Financial_Hardship": "objection_category",
+      "Strategy_Reciprocity": "persuasion_strategy",
+      "Template_Empathy_Then_Option": "sales_pitch_template",
+      "Compliance_Recording_Notice": "compliance_rule",
+      "Hardship_Unemployment": "hardship_event",
+      "Commitment_PTP": "payment_commitment"
+      }},
+      "new_schema_types": {{
+      "nodes": ["sop_process", "sop_step"],
+      "relations": ["includesStep", "followedByStep"],
+      "attributes": ["stepOrder", "entryCondition", "exitCondition"]
+      }}
+      }}
+
+      催收对话内容:
+      `{chunk}`
+
+    debt_collection_agent_pydantic: |
+      你是中国银行业信用卡外呼催收对话信息提取专家，专注于 M1 阶段（逾期 1-30 天，delinquencyStage = "M1"）非自愿失业类债务人的 SOP 挖掘。
+      请根据文末提供的催收通话内容，严格按照下方提供的 Pydantic JSON Schema 输出结构化 JSON，不得添加 Schema 之外的字段。
+
+      Pydantic JSON Schema（源自 M1-Unemployment Debt Recovery Domain & Dialogue Ontology）:
+      `{schema}`
+
+      ============================================================
+      【输出总则】
+      ============================================================
+
+      1. 严格遵循 Schema：
+         - 字段名、枚举值、嵌套结构必须与 Schema 完全一致，不得拼写偏差
+         - 枚举字段只能取 Schema 中 `enum` 列出的值（区分大小写）
+         - 必填字段不可缺失；可选字段无值时可省略或设为 null
+         - 输出根对象为 `DebtCollectionExtraction`
+
+      2. 输出格式：
+         - 纯 JSON，不含任何解释文字、前后缀或 Markdown 代码块标记
+         - 日期时间使用 ISO 8601（YYYY-MM-DD 或 YYYY-MM-DDTHH:MM:SS）
+         - 布尔值使用 true / false；空列表使用 []
+
+      ============================================================
+      【根对象结构】
+      ============================================================
+
+      DebtCollectionExtraction 包含四个顶层字段：
+      - call                : Call（必填，主通话实体）
+      - master_stages       : list[MasterSOPStage]（通话涉及的主 SOP 阶段）
+      - sub_stages          : list[SubStage]（M1-Unemployment 子流程阶段）
+      - compliance_artifacts: list[ComplianceArtifact]（通话涉及的合规制品）
+
+      ============================================================
+      【Call 实体关键嵌套关系】（对应本体中的边）
+      ============================================================
+
+      - conducted_by_agent    → CollectionAgent
+      - has_debtor_participant→ Debtor（内含 has_account、has_financial_profile、experiences_hardship）
+      - concerns_account      → DebtAccount
+      - evaluated_financials  → FinancialHealthProfile
+      - detected_rfd          → RFDEnum（失业场景应为 INVOLUNTARY_UNEMPLOYMENT）
+      - current_master_stage  → MasterSOPStageEnum
+      - current_sub_stage     → SubStageEnum（仅当通话进入 M1-Unemployment 分支）
+      - logged_compliance     → list[ComplianceArtifactEnum]
+      - yielded_outcome       → CallOutcome（判别字段 outcome_type 决定具体子类）
+
+      CallOutcome 是判别联合（discriminated union），必须包含 `outcome_type` 字段：
+      - outcome_type = "PromiseToPay"          → ptp_amount / ptp_due_date / is_auto_pay_configured
+      - outcome_type = "ForbearanceAgreement"  → forbearance_duration_days / restructured_terms
+      - outcome_type = "MicroCommitment"       → commitment_description / follow_up_date
+
+      仅当通话确实产生对应结果时才填写 yielded_outcome；未产生任何承诺时可省略。
+
+      ============================================================
+      【SOP 状态机拓扑】
+      ============================================================
+
+      Master SOP 主线（7 阶段，线性推进）：
+        Stage_1_Opening → Stage_2_RPC → Stage_3_Inquiry
+        → Stage_4_ApplyPressure → Stage_5_WorkoutSolution
+        → Stage_6_PushPTP → Stage_7_Closing
+
+      M1-Unemployment 子流程（Stage 3 分支）：
+        SubStage_3_1_EmpathyPivot
+        → SubStage_3_2_FinancialProfiling
+        → SubStage_3_3_CardUtility
+        → 回归 Stage_5_WorkoutSolution
+
+      表达方式：
+      - master_stages 中每个 MasterSOPStage 通过 next_master_stage 指向下一阶段
+      - Stage_3_Inquiry 通过 branches_to_sub_stage 指向 SubStage_3_1_EmpathyPivot
+      - sub_stages 中每个 SubStage 通过 next_sub_stage 顺序流转
+      - 最后一个 SubStage 通过 rejoins_master_stage 回归主线
+      - 若通话中实际履行某阶段的合规要求，可在 requires_compliance 中列出
+
+      【枚举字段填充要求 —— 必须遵守】
+
+      Pydantic 模型中有若干字段的类型为本体枚举（Enum），这些枚举成员
+      在本体中是"命名个体（Named Individual）"，必须作为图节点存在。
+      提取时务必显式填充下列字段：
+
+      在 Call 上：
+        - current_master_stage : MasterSOPStageEnum（必填）
+        - current_sub_stage    : SubStageEnum（若进入 M1-失业子流程则必填，否则 null）
+        - logged_compliance    : list[ComplianceArtifactEnum]（通话中满足的合规检查点）
+
+      在 MasterSOPStage 上：
+        - stage_id             : MasterSOPStageEnum（必填）
+        - next_master_stage    : MasterSOPStageEnum（除 STAGE_7_CLOSING 外必填）
+        - branches_to_sub_stage: SubStageEnum（仅 STAGE_3_INQUIRY 可填）
+        - requires_compliance  : list[ComplianceArtifactEnum]（该阶段应有的合规要求）
+
+      在 SubStage 上：
+        - substage_id          : SubStageEnum（必填）
+        - next_sub_stage       : SubStageEnum（除最后一个子阶段外必填）
+        - rejoins_master_stage : MasterSOPStageEnum（仅最后一个子阶段填）
+
+      在 ComplianceArtifact 上：
+        - artifact_id          : ComplianceArtifactEnum（必填）
+
+      ⚠️ 空列表 [] 仅在通话确实未涉及任何合规检查点时使用。
+      ⚠️ 不得因为 PII 保护而省略这些枚举字段 —— 它们不包含任何个人信息。
+
+      ============================================================
+      【PII 保护 —— 强制规则】
+      ============================================================
+
+      - 禁止输出真实姓名、电话、身份证号、具体账户号、真实通话 ID
+      - 所有实体 ID 使用占位符，如 "Call_Anonymous"、"Debtor_Anonymous"、"Agent_Anonymous"、"Account_Anonymous"
+      - 以下敏感字段应设为 null 或直接省略：
+          account_number、outstanding_balance、ui_benefit_amount、severance_amount、ptp_amount
+      - 具体还款日期（ptp_due_date）如非必需也建议省略
+      - 只保留非敏感的元数据（如 delinquency_stage、days_past_due、is_receiving_ui_benefits、is_verification_passed）
+
+      ============================================================
+      【中国监管合规识别】
+      ============================================================
+
+      通话中出现的合规检查点映射到 ComplianceArtifactEnum：
+      - 身份核实                        → "Req_Verification"
+      - 录音告知 / 债务催收声明          → "Req_MiniMiranda"
+      - 获取明确同意（如外呼时段同意）    → "Req_ExplicitConsent"
+
+      要求：
+      - 满足的检查点写入 call.logged_compliance
+      - 每个检查点也应在 compliance_artifacts 中作为独立节点出现
+      - 若通话违反合规（如未做身份核实），logged_compliance 中不包含该项即可，无需额外标注
+
+      ============================================================
+      【示例输出】
+      ============================================================
+
+      {{
+        "call": {{
+          "call_id": "Call_Anonymous",
+          "conducted_by_agent": {{ "agent_id": "Agent_Anonymous" }},
+          "has_debtor_participant": {{
+            "debtor_id": "Debtor_Anonymous",
+            "has_account": [
+              {{ "account_id": "Account_Anonymous", "delinquency_stage": "M1", "days_past_due": 15 }}
+            ],
+            "experiences_hardship": "RFD_InvoluntaryUnemployment"
+          }},
+          "concerns_account": {{ "account_id": "Account_Anonymous", "delinquency_stage": "M1" }},
+          "evaluated_financials": {{
+            "profile_rfd": "RFD_InvoluntaryUnemployment",
+            "is_receiving_ui_benefits": true
+          }},
+          "detected_rfd": "RFD_InvoluntaryUnemployment",
+          "current_master_stage": "Stage_3_Inquiry",
+          "current_sub_stage": "SubStage_3_2_FinancialProfiling",
+          "logged_compliance": ["Req_Verification", "Req_MiniMiranda"],
+          "yielded_outcome": {{
+            "outcome_type": "PromiseToPay",
+            "is_auto_pay_configured": false
+          }},
+          "is_verification_passed": true
+        }},
+        "master_stages": [
+          {{ "stage_id": "Stage_1_Opening", "next_master_stage": "Stage_2_RPC" }},
+          {{ "stage_id": "Stage_2_RPC", "next_master_stage": "Stage_3_Inquiry" }},
+          {{ "stage_id": "Stage_3_Inquiry", "branches_to_sub_stage": "SubStage_3_1_EmpathyPivot" }}
+        ],
+        "sub_stages": [
+          {{ "substage_id": "SubStage_3_1_EmpathyPivot", "next_sub_stage": "SubStage_3_2_FinancialProfiling" }},
+          {{ "substage_id": "SubStage_3_2_FinancialProfiling", "next_sub_stage": "SubStage_3_3_CardUtility" }},
+          {{ "substage_id": "SubStage_3_3_CardUtility", "rejoins_master_stage": "Stage_5_WorkoutSolution" }}
+        ],
+        "compliance_artifacts": [
+          {{ "artifact_id": "Req_Verification" }},
+          {{ "artifact_id": "Req_MiniMiranda" }}
+        ]
+      }}
+
+      催收对话内容:
+      `{chunk}`
+
+         
   decomposition:
     general: "You are a professional question decomposition expert specializing in\
       \ multi-hop reasoning.\nGiven the following ontology and the question, decompose\
@@ -402,7 +707,7 @@ retrieval:
   enable_reranking: true
   faiss:
     device: cuda
-    max_workers: 4
+    max_workers: 5
     search_k: 50
   recall_paths: 2
   similarity_threshold: 0.3
