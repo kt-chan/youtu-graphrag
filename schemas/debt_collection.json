@@ -1,0 +1,33 @@
+{
+  "Nodes": [
+    "MasterStage",
+    "SubflowCategory",
+    "SubStep",
+    "ComplianceArtifact",
+    "Objection"
+  ],
+  "Relations": [
+    "nextMasterStage",
+    "branchesToCategory",
+    "requiresCompliance",
+    "yieldsOutcome",
+    "parentMasterStage",
+    "initialSubStep",
+    "parentCategory",
+    "nextSubStep",
+    "rejoinsMasterStage",
+    "triggeredInStep",
+    "satisfiedInStage"
+  ],
+  "Attributes": [
+    "name",
+    "class",
+    "provenance",
+    "stage_id",
+    "category_id",
+    "sub_step_id",
+    "artifact_id",
+    "objection_id",
+    "extracted_info"
+  ]
+}

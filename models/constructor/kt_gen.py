@@ -55,7 +55,9 @@ from utils.checkpoint import (
 )
 from utils.chunking import TextChunker, stable_chunk_id
 from utils.llm_cache import LLMResponseCache
-from utils.logger import logger
+
+# ── CHANGED ── import the LLM-exchange logger helper alongside `logger`.
+from utils.logger import logger, log_llm_exchange
 
 
 # =============================================================================
@@ -179,7 +181,6 @@ class GraphWalker:
         hints_out: Dict[str, Dict[str, Any]],
         visited: Set[str],
     ) -> Optional[str]:
-        # List — recurse on each item.
         if isinstance(obj, list):
             for item in obj:
                 self.walk(
@@ -193,7 +194,6 @@ class GraphWalker:
                 )
             return None
 
-        # Non-model — nothing to emit.
         if not isinstance(obj, BaseModel):
             return None
 
@@ -226,8 +226,6 @@ class GraphWalker:
             if val is None or isinstance(val, BaseModel):
                 continue
 
-            # Bare enum — node-type enums become edges (handled in
-            # _collect_edges); non-node enums remain scalar properties.
             if isinstance(val, Enum):
                 if self.enum_target_node_id(val) is None:
                     s = self.serialize_scalar(val)
@@ -235,8 +233,6 @@ class GraphWalker:
                         props[field_name] = s
                 continue
 
-            # List of scalars / enums (lists containing models are handled
-            # by _collect_edges).
             if isinstance(val, list):
                 if all(not isinstance(x, BaseModel) for x in val):
                     filtered = [
@@ -252,7 +248,6 @@ class GraphWalker:
                         props[field_name] = ", ".join(s for s in serialized if s)
                 continue
 
-            # Plain scalar
             s = self.serialize_scalar(val)
             if s is not None:
                 props[field_name] = s
@@ -391,9 +386,6 @@ def merge_nodes_and_edges(
         if node_id in graph:
             existing = graph.nodes[node_id].get("properties", {})
             incoming = node_data["properties"]
-
-            # Incoming (real, richer) wins on conflicts; existing supplies
-            # any properties the incoming walk didn't carry.
             merged = {**existing, **incoming}
 
             prov = list(existing.get("provenance", []))
@@ -411,9 +403,6 @@ def merge_nodes_and_edges(
             graph.add_node(node_id, **{**node_data, "properties": props})
 
     # ── 3) Edges ─────────────────────────────────────────────────────────
-    # MultiDiGraph allows parallel edges; each carries the current chunk_id
-    # so dedup can later merge identical (u, v, relation) triples while
-    # keeping a full provenance list.
     for u, v, relation in edges:
         metrics["edges_emitted"] = metrics.get("edges_emitted", 0) + 1
         graph.add_edge(
@@ -445,7 +434,6 @@ def triple_deduplicate(graph: nx.MultiDiGraph) -> nx.MultiDiGraph:
                     grouped[group_key].append(cid)
         else:
             grouped[group_key] = prov
-            # Keep the first-seen edge's non-provenance, non-relation attrs.
             seen_attrs[group_key] = {
                 k: val for k, val in data.items() if k not in ("provenance", "relation")
             }
@@ -534,7 +522,6 @@ def _detect_communities(graph: nx.MultiDiGraph, config) -> None:
         logger.warning("No level-2 nodes; skipping community detection.")
         return
 
-    # Exclude isolated nodes — they cannot form meaningful communities.
     connected = [n for n in level2_nodes if graph.degree(n) > 0]
     isolated = [n for n in level2_nodes if graph.degree(n) == 0]
     if isolated:
@@ -613,7 +600,6 @@ class KTBuilder:
             "edges_emitted": 0,
         }
 
-        # Debug/observability flags
         self._constructed = False
         self._postprocessed = False
 
@@ -723,11 +709,22 @@ class KTBuilder:
         if id in self.llm_cache:
             llm_response = self.llm_cache.get(id)
             logger.debug(f"[{id}] Using cached LLM response")
+            cache_status = "cache"
         else:
             llm_response = self.extract_with_llm(prompt)
             self.llm_cache.set(id, llm_response)
-            # Persist eagerly so a crash mid-run preserves progress.
-            self.llm_cache.save()
+            self.llm_cache.save()  # eager persist
+            cache_status = "fresh"
+
+        # ── CHANGED ── log EVERY exchange (fresh or cache-hit) to the
+        # dedicated LLM file log.  Set max_chars=<int> to truncate.
+        log_llm_exchange(
+            chunk_id=id,
+            prompt=prompt,
+            response=llm_response,
+            stage=f"{self.dataset_name}:{cache_status}",
+            max_chars=1000000,
+        )
 
         self._track_tokens(id, prompt, llm_response)
         self.metrics["chunks_total"] += 1
@@ -818,7 +815,8 @@ class KTBuilder:
                             )
                     except Exception as e:
                         failed_count += 1
-                        logger.warning(f"artifact_id: {type(e).__name__}: {e}")
+                        # ── CHANGED ── was mislabelled as "artifact_id".
+                        logger.warning(f"[document failed] {type(e).__name__}: {e}")
         except Exception as e:
             logger.error(f"Executor error: {type(e).__name__}: {e}")
             return
@@ -871,11 +869,7 @@ class KTBuilder:
     # Post-processing — Level 3 (dedup) and Level 4 (communities)
     # =========================================================================
     def deduplicate(self) -> None:
-        """Level-3: collapse parallel (u, v, relation) edges into one.
-
-        Merges provenance lists so no contribution history is lost.  Cheap,
-        idempotent, and safe to run even on an already-deduplicated graph.
-        """
+        """Level-3: collapse parallel (u, v, relation) edges into one."""
         before_nodes = self.graph.number_of_nodes()
         before_edges = self.graph.number_of_edges()
 
@@ -891,11 +885,7 @@ class KTBuilder:
         _detect_communities(self.graph, self.config)
 
     def postprocess(self) -> None:
-        """Full post-processing: dedup + community detection.
-
-        Use `deduplicate()` / `detect_communities()` individually if you
-        need finer control (e.g. skip only Level 4).
-        """
+        """Full post-processing: dedup + community detection."""
         logger.info(f"========{'Start Postprocessing':^20}========")
         logger.info("➖" * 30)
         start = time.time()
@@ -929,16 +919,10 @@ class KTBuilder:
         )
         log_graph_stats(self.graph, prefix="[post-construct] ")
 
-        # Save checkpoint BEFORE Level 3/4 — this is the debug boundary.
         self.save_checkpoint()
 
     def build_knowledge_graph(self, corpus: str) -> List[Dict[str, Any]]:
-        """Orchestrator: construct (or reload) → dedup → [Level-4] → write JSON.
-
-        `config.system.skip_postprocess` skips ONLY community detection
-        (Level 4).  Deduplication and JSON output always run, so the
-        returned graph is always clean and persisted.
-        """
+        """Orchestrator: construct (or reload) → dedup → [Level-4] → write JSON."""
         logger.info(f"========{'Start Building':^20}========")
         logger.info("➖" * 30)
 
