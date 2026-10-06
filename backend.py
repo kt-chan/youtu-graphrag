@@ -1134,8 +1134,7 @@ async def ask_question(request: QuestionRequest, client_id: str = "default"):
 
         # -------- If NEW_QUERIES: batch-retrieve + ONE final LLM call --------
         if final_answer is None and new_queries:
-            current_query = " | ".join(new_queries)
-            final_answer = current_query
+            final_answer = "; ".join(q.strip() for q in new_queries if q and q.strip())
 
         if final_answer is None:
             final_answer = reasoning or "Unable to generate an answer."

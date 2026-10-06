@@ -234,7 +234,7 @@ class ConfigManager:
             if not os.path.exists(dataset_config.schema_path):
                 logger.warning(f"Schema path not found for {dataset_name}: {dataset_config.schema_path}")
         
-        valid_modes = ["pydantic", "agent", "noagent"]
+        valid_modes = ["agent", "noagent"]
         if self.triggers.mode not in valid_modes:
             raise ValueError(f"Invalid mode: {self.triggers.mode}. Must be one of {valid_modes}")
         

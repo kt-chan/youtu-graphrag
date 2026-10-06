@@ -1,6 +1,6 @@
 # base_config.yaml
 system:
-  debug: true
+  debug: false
   skip_postprocess: false
 
 construction:
@@ -15,7 +15,7 @@ construction:
   - demo
   - debt_collection
   max_workers: 10
-  mode: pydantic  # set noagent to speed up
+  mode: agent  # set noagent to speed up
   overlap: 200
   tree_comm:
     embedding_model: all-MiniLM-L6-v2
@@ -24,41 +24,6 @@ construction:
     max_total_communities: 100
     
 datasets:
-  hotpot:
-    corpus_path: data/hotpotqa/hotpotqa_corpus.json
-    qa_path: data/hotpotqa/hotpotqa.json
-    schema_path: schemas/hotpot.json
-    graph_output: output/graphs/hotpot_new.json
-  2wiki:
-    corpus_path: data/2wiki/2wikimultihopqa_corpus.json
-    qa_path: data/2wiki/2wikimultihopqa.json
-    schema_path: schemas/2wiki.json
-    graph_output: output/graphs/2wiki_new.json
-  musique:
-    corpus_path: data/musique/musique_corpus.json
-    qa_path: data/musique/musique.json
-    schema_path: schemas/musique.json
-    graph_output: output/graphs/musique_new.json
-  graphrag-bench:
-    corpus_path: data/graphrag-bench-reformat/bench_corpus.json
-    qa_path: data/graphrag-bench-reformat/graphrag-bench.json
-    schema_path: schemas/graphrag-bench.json
-    graph_output: output/graphs/graphrag-bench_new.json
-  demo:
-    corpus_path: data/demo/demo_corpus.json
-    qa_path: data/demo/demo.json
-    schema_path: schemas/demo.json
-    graph_output: output/graphs/demo_new.json
-  anony_chs:
-    corpus_path: data/anony_chs/final_chunk_corpus.json
-    qa_path: data/anony_chs/final_qa_pairs.json
-    schema_path: schemas/anony_chs.json
-    graph_output: output/graphs/anony_chs_new.json
-  anony_eng:
-    corpus_path: data/anony_eng/final_chunk_corpus.json
-    qa_path: data/anony_eng/final_qa_pairs.json
-    schema_path: schemas/anony_eng.json
-    graph_output: output/graphs/anony_eng_new.json
   debt_collection:
     corpus_path: data/debt_collection/debt_collection_corpus.json
     qa_path: data/debt_collection/debt_collection_qa.json
@@ -81,11 +46,13 @@ output:
   logs_dir: output/logs
   save_chunk_details: true
   save_intermediate_results: true
+
 performance:
   batch_size: 16
   max_workers: 32
   memory_optimization: true
   parallel_processing: true
+
 prompts:
   construction:
     # NoAgent mode prompts
@@ -230,254 +197,253 @@ prompts:
       }}
       }}
 
-    debt_collection_agent:    |
-      你是中国银行业信用卡外呼催收对话 SOP 挖掘专家，专注于 M1 阶段（逾期 1-30 天）失业类债务人的催收标准作业流程提取。请根据文末提供的催收通话内容，并参考以下 DCSPO（Debt Collection Sales Pitch Ontology）本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板等关键信息，并重点挖掘 SOP 步骤、决策点与失业场景应对策略，严格按照示例返回 JSON 格式。
+    debt_collection_agent: |
+      你是中国银行业信用卡外呼催收对话信息提取专家，专注于 M1 阶段（逾期 1-30 天）失业及其他困难类债务人的 SOP 本体挖掘。
+      请根据文末的催收通话内容，严格按照下方提供的 Pydantic JSON Schema 输出结构化 JSON。
 
-      参考 schema（重要：最大限度使用本体中已定义的类与关系）:
-      `{schema}`
-
-
-      要求：
-
-      1. 识别对话阶段（DialogueStage 实例，如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing），并用 `hasNextStage` 表达阶段顺序。
-      2. 识别债务人画像（DebtorPersona 实例，如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial），并用 `susceptibleTo` 关联到 PersuasionStrategy。
-      3. 识别异议类别（ObjectionCategory 实例，如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal），**重点关注失业导致的财务困难**；用 `triggeredInStage` 关联到 DialogueStage，用 `resolvedBy` 关联到 PersuasionStrategy。
-      4. 识别说服策略（PersuasionStrategy 实例，如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management），用 `instantiates` 关联到 SalesPitchTemplate，用 `alignsWithPersona` 关联到 DebtorPersona。
-      5. 提取话术模板（SalesPitchTemplate 实例）与合规规则（ComplianceRule 实例）；合规通过 `requiresCompliance`（DialogueStage → ComplianceRule）、`governsStage`、`restrictsStrategy` 表达，**不使用任何未在本体中定义的合规引用关系**。
-      6. **【SOP 挖掘核心】** 提取 M1 阶段失业类债务人的标准作业流程，包括：
-         - 失业状态确认与核实
-         - 还款意愿与还款能力评估
-         - 可提供的援助方案（延期、分期、减免）及适用条件
-         - 承诺还款（PTP，PaymentCommitment 实例）的获取与确认
-         - 后续跟进安排与时间节点（SystemEvent 实例，用 `precedes` / `follows` 表达顺序）
-         - 升级或转接条件
-         注意：DCSPO 本体未定义专门的 SOP 类与关系，如确有价值可放入 `new_schema_types`（见第 11 条）。
-      7. 失业场景使用 `dcspo:hasHardship` 关联债务人（Debtor）与 HardshipEvent；`causedBy` 表达异议或困难的成因。
-      8. **【核心限制：仅限 Schema 抽象概念】** 提取实体类型和关系时，绝对禁止提取具体的客户身份信息（姓名、电话、身份证号、具体账户）和具体的支付细节（金额数值、还款日期）。必须强制抽象到 Schema 概念级别。
-      9. 实体名称应直接使用 DCSPO 中定义的规范类别名称或抽象概念标签（例如使用 `Objection_Financial_Hardship` 代替“我被裁员了”；使用 `Commitment_PTP` 代替“明天转500”），禁止将对话中包含具体隐私或金额的原话提取为实体。
-      10. 根据 DCSPO 本体为每个实体分配正确的类型；triples 中的关系名必须严格来自上述 31 个对象属性。
-      11. 模式演化：若发现新的重要实体类型、关系类型或属性类型对 SOP 挖掘有价值，请放入 `new_schema_types`。严格阈值 0.9，须同时满足重要性与与现有模式的低相似性。
-
-      注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。
-
-      示例输出（含属性、SOP 步骤、三元组、实体类型及新模式类型；JSON 花括号已转义）：
-      {{
-      "attributes": {{
-      "Call_2317941550352385028": [
-      "callId: 2317941550352385028",
-      "callDate: 20260506",
-      "talkTime: 613",
-      "overdueBucket: M1"
-      ]
-      }},
-      "sop_steps": [
-      "确认失业状态",
-      "评估还款意愿与能力",
-      "提供延期/分期/减免方案",
-      "获取 PTP 承诺",
-      "安排后续跟进"
-      ],
-      "triples": [
-      ["Call_2317941550352385028", "hasNextStage", "Stage_Opening_Verification"],
-      ["Call_2317941550352385028", "targetsDebtor", "Debtor_Anonymous"],
-      ["Call_2317941550352385028", "requiresCompliance", "Compliance_Recording_Notice"],
-      ["Debtor_Anonymous", "hasHardship", "Hardship_Unemployment"],
-      ["Debtor_Anonymous", "exhibitsTrait", "Persona_Worried"],
-      ["Objection_Financial_Hardship", "triggeredInStage", "Stage_Hardship_Exploration"],
-      ["Objection_Financial_Hardship", "resolvedBy", "Strategy_Reciprocity"],
-      ["Persona_Worried", "susceptibleTo", "Strategy_Reciprocity"],
-      ["Strategy_Reciprocity", "instantiates", "Template_Empathy_Then_Option"],
-      ["Template_Empathy_Then_Option", "addressesObjection", "Objection_Financial_Hardship"],
-      ["Strategy_Reciprocity", "alignsWithPersona", "Persona_Worried"],
-      ["Call_2317941550352385028", "agreedTo", "Commitment_PTP"]
-      ],
-      "entity_types": {{
-      "Call_2317941550352385028": "collection_call",
-      "Stage_Opening_Verification": "dialogue_stage",
-      "Stage_Hardship_Exploration": "dialogue_stage",
-      "Debtor_Anonymous": "debtor",
-      "Persona_Worried": "debtor_persona",
-      "Objection_Financial_Hardship": "objection_category",
-      "Strategy_Reciprocity": "persuasion_strategy",
-      "Template_Empathy_Then_Option": "sales_pitch_template",
-      "Compliance_Recording_Notice": "compliance_rule",
-      "Hardship_Unemployment": "hardship_event",
-      "Commitment_PTP": "payment_commitment"
-      }},
-      "new_schema_types": {{
-      "nodes": ["sop_process", "sop_step"],
-      "relations": ["includesStep", "followedByStep"],
-      "attributes": ["stepOrder", "entryCondition", "exitCondition"]
-      }}
-      }}
-
-      催收对话内容:
-      `{chunk}`
-
-    debt_collection_agent_pydantic: |
-      你是中国银行业信用卡外呼催收对话信息提取专家，专注于 M1 阶段（逾期 1-30 天，delinquencyStage = "M1"）非自愿失业类债务人的 SOP 挖掘。
-      请根据文末的催收通话内容，严格按照下方提供的 Pydantic JSON Schema 输出结构化 JSON，不得添加 Schema 之外的字段。
-
-      Pydantic JSON Schema（源自 M1-Unemployment Debt Recovery Domain & Dialogue Ontology）:
+      Pydantic JSON Schema:
       `{schema}`
 
       ============================================================
-      【输出总则】
+      【九步主流程】
       ============================================================
 
-      1. 严格遵循 Schema：字段名、枚举值、嵌套结构必须与 Schema 完全一致，不得拼写偏差。
-      2. 枚举字段只能取 Schema 中 `enum` 列出的值（区分大小写）。
-      3. 必填字段不可缺失；可选字段无值时省略或 null。
-      4. 输出根对象为 `DebtCollectionExtraction`，**只有三个字段**：
-        `master_stages`、`sub_stages`、`compliance_artifacts`。
-      5. **不要**输出 `call` / `debtor` / `agent` / `account` / `financial_profile`
-        等实例层对象 —— 它们已从 Schema 移除，通话级身份对 SOP 挖掘无贡献。
-      6. 纯 JSON，不含任何解释、前缀、Markdown 代码块标记。
+        S1_RPCVerification          — 身份核实与合规披露
+        S2_BalanceDisclosure        — 欠款金额披露
+        S3_NeedsDiscovery           — 需求挖掘（★ 子流程分支点）
+        S4_UrgencyCreation          — 后果说明与紧迫感
+        S5_ArrangementNegotiation   — 方案协商（★ 唯一挂载 Outcome_*）
+        S6_PTPCommitment            — 还款承诺确认
+        S7_SkipTracing              — 联系方式更新（协商成功后）
+        S8_ProfessionalInterruption — 客户不便时礼貌中断（协商未成时）
+        S9_CallClose                — 复述、留号码、记录结果
+
+      三条合法路径，先判定路径再填阶段：
+
+        路径 A（协商成功）：S1 → S2 → S3 → [S4] → S5 → S6 → [S7] → S9
+        路径 B（客户拒绝）：S1 → S2 → S3 → [S4] → S8
+        路径 C（开场失败）：S1
+
+      规则：
+      - S1 与 S2 即使在同一段开场白里，也必须分别记两个节点。
+      - S4 可跳过；出现施压话术才记 S4。
+      - S7 与 S8 互斥，不共存。
+      - 路径 B 以 S8 收尾，不再进入 S9；路径 C 以 S1 收尾。
+      - 仅通话到达的最后一个阶段 next_master_stage 为 null。
 
       ============================================================
-      【本體層 —— 必須完整填充 SOP 骨架】
+      【图连通性五条硬约束】
       ============================================================
 
-      `master_stages` 必须包含通话中**实际走过**的所有主阶段，并用
-      `next_master_stage` 串成链：
+      1. 严禁悬空引用：
+         - rejoins_master_stage 必须引用 master_stages 中的主阶段（只能是 S4 及之后）。
+         - triggered_in_step 必须引用 master_stages 中的主阶段。
+         - satisfied_in_stage 可引用 master_stages 或 sub_steps 中已存在的节点。
 
-        Stage_1_Opening
-          → Stage_2_RPC
-          → Stage_3_Inquiry
-          → Stage_4_ApplyPressure
-          → Stage_5_WorkoutSolution
-          → Stage_6_PushPTP
-          → Stage_7_Closing
+      2. 主流程线性无环：master_stages 按 S1→S9 顺序、无重复。
+         仅通话到达的最后一个阶段 next_master_stage 为 null。
 
-      除链末端外，每个阶段的 `next_master_stage` 必须填下一阶段。
-      **通话实际停在哪一阶段，链就在该阶段结束** —— 不要伪造未发生的后续阶段。
+      3. 禁止空节点：未进入分支时 branches_to_category 为 null，
+         subflow_categories 与 sub_steps 为 []。不要输出空 extracted_info。
 
-      若通话进入 M1-失业子流程（`Stage_3_Inquiry` 分支）：
+      4. 子流程隔离：
+         - Flow_Unemployment 只能含：SubStep_Empathy_Verify, SubStep_Alt_Resources,
+           SubStep_Hardship_Pitch, SubStep_Micro_Commitment。
+         - Flow_Other 只能含：SubStep_Root_Cause, SubStep_Impact_Assess, SubStep_Custom_Pitch。
+         - 分支固定从 S3_NeedsDiscovery 发生；parent_master_stage 恒为 "S3_NeedsDiscovery"。
+         - **rejoins_master_stage 只能是 S4 及之后的阶段**
+           （S4_UrgencyCreation / S5_ArrangementNegotiation / S6_PTPCommitment /
+           S7_SkipTracing / S8_ProfessionalInterruption / S9_CallClose）。
+           子流程是从 S3 分支出去的，不可能回挂到 S1/S2/S3。
 
-        Stage_3_Inquiry.branches_to_sub_stage = SubStage_3_1_EmpathyPivot
-        sub_stages 中按顺序填充：
-          SubStage_3_1_EmpathyPivot      → next_sub_stage = SubStage_3_2_FinancialProfiling
-          SubStage_3_2_FinancialProfiling → next_sub_stage = SubStage_3_3_CardUtility
-          SubStage_3_3_CardUtility.rejoins_master_stage = Stage_5_WorkoutSolution
+      5. Outcome 挂载限定：stage_outcomes 只能出现在 S5_ArrangementNegotiation 上。
 
-      `compliance_artifacts` 必须包含通话中涉及的所有合规检查点。
-      每个阶段 / 子阶段的 `requires_compliance` 必须列出该节点应满足的合规要求。
-
-      ============================================================
-      【類型層 —— 把通話信號掛到本體節點上】
-      ============================================================
-
-      原 `Call` 對象上的信號已上移到本體層。請按以下規則填充：
-
-      ▸ `handles_rfd`  —— 「這個階段通常處理什麼困難原因？」
-          掛在**處理失業原因的階段 / 子階段**上。
-          M1-失业场景一律填 `["RFD_InvoluntaryUnemployment"]`。
-          通常出現在 `Stage_3_Inquiry` 及其子階段。
-
-      ▸ `yields_outcome` —— 「這個階段通常導向什麼結果？」
-          掛在**產生最終結果的階段 / 子階段**上。
-          可取 `"PromiseToPay"`、`"ForbearanceAgreement"`、`"MicroCommitment"`。
-          例：通话产生 PTP → `Stage_6_PushPTP.yields_outcome = ["PromiseToPay"]`；
-              通话给失业宽限 → 对应的 workout 子阶段 `yields_outcome = ["ForbearanceAgreement"]`。
-
-      ▸ `requires_compliance` —— 「這個階段要求哪些合規檢查？」
-          掛在**需要合規檢查的階段**上。
-          例：`Stage_1_Opening.requires_compliance = ["Req_Verification", "Req_MiniMiranda"]`。
-
-      ⚠ 不要输出以下字段（已从 Schema 移除）：
-          `current_master_stage` / `current_sub_stage` / `detected_rfd` /
-          `logged_compliance` / `is_verification_passed` / `call` / `debtor`。
-          它們的語義已經由上面三條本體層邊表達。
+      6. 字段别串位（易错）：
+         - branches_to_category（子流程分类，值形如 "Flow_Unemployment"）≠ next_master_stage
+           （主阶段，值形如 "S4_UrgencyCreation"）。
+         - 二者绝不混填；仅在 S3_NeedsDiscovery 上允许 branches_to_category 非空。
 
       ============================================================
-      【PII 保護 —— 已內建於 Schema】
+      【字段格式强约束】
       ============================================================
 
-      Schema 已移除所有 PII / 金額 / 日期 / 自由文字字段。你只需按 Schema 填寫
-      剩餘字段即可。**不要**在 label 字段中寫入人名、電話、身份證號、銀行卡號
-      或任何具體金額。
+      - master_stages[].required_compliance 是字符串数组，元素只能是：
+        "Compliance_Verification" | "Compliance_Disclosure" | "Compliance_ExplicitConsent" | "Compliance_HardshipTerms"
+        禁止写成 {{"artifact_id": "..."}} 或 {{"artifact_id": "...", "satisfied_in_stage": "..."}}。
 
-      label 字段應填寫該節點的**概念描述**，例如：
-        MasterSOPStage.stage_id = "Stage_1_Opening"
-        MasterSOPStage.label    = "開場白、錄音告知與本人身份核實"
+      - compliance_artifacts 才是对象数组，元素形如：
+        {{"artifact_id": "Compliance_Verification", "satisfied_in_stage": "S1_RPCVerification"}}
+
+      - objections_raised[].triggered_in_step 只能填主阶段，例如 "S3_NeedsDiscovery"、
+        "S5_ArrangementNegotiation"，禁止填 "SubStep_*"。
 
       ============================================================
-      【示例輸出】
+      【示例 1：路径 A —— 协商成功，达成微承诺】
       ============================================================
 
       {{
         "master_stages": [
           {{
-            "stage_id": "Stage_1_Opening",
-            "label": "開場白、錄音告知與本人身份核實",
-            "next_master_stage": "Stage_2_RPC",
-            "branches_to_sub_stage": null,
-            "requires_compliance": ["Req_Verification", "Req_MiniMiranda"],
-            "handles_rfd": [],
-            "yields_outcome": []
+            "stage_id": "S1_RPCVerification",
+            "next_master_stage": "S2_BalanceDisclosure",
+            "required_compliance": ["Compliance_Verification", "Compliance_Disclosure"]
           }},
           {{
-            "stage_id": "Stage_2_RPC",
-            "label": "本人接觸並確認其知曉逾期",
-            "next_master_stage": "Stage_3_Inquiry"
+            "stage_id": "S2_BalanceDisclosure",
+            "next_master_stage": "S3_NeedsDiscovery"
           }},
           {{
-            "stage_id": "Stage_3_Inquiry",
-            "label": "問詢逾期原因",
-            "next_master_stage": "Stage_4_ApplyPressure",
-            "branches_to_sub_stage": "SubStage_3_1_EmpathyPivot",
-            "handles_rfd": ["RFD_InvoluntaryUnemployment"]
+            "stage_id": "S3_NeedsDiscovery",
+            "next_master_stage": "S5_ArrangementNegotiation",
+            "branches_to_category": "Flow_Unemployment"
           }},
           {{
-            "stage_id": "Stage_4_ApplyPressure",
-            "label": "溫和提示繼續跟進",
-            "next_master_stage": "Stage_5_WorkoutSolution"
+            "stage_id": "S5_ArrangementNegotiation",
+            "next_master_stage": "S6_PTPCommitment",
+            "stage_outcomes": ["Outcome_MicroCommitment"]
           }},
           {{
-            "stage_id": "Stage_5_WorkoutSolution",
-            "label": "先還部分金額並申請減免",
-            "next_master_stage": "Stage_6_PushPTP"
+            "stage_id": "S6_PTPCommitment",
+            "next_master_stage": "S9_CallClose"
           }},
           {{
-            "stage_id": "Stage_6_PushPTP",
-            "label": "鎖定還款時限",
-            "next_master_stage": "Stage_7_Closing",
-            "yields_outcome": ["PromiseToPay"]
-          }},
-          {{
-            "stage_id": "Stage_7_Closing",
-            "label": "禮貌結束通話"
+            "stage_id": "S9_CallClose",
+            "next_master_stage": null
           }}
         ],
-        "sub_stages": [
+        "subflow_categories": [
           {{
-            "substage_id": "SubStage_3_1_EmpathyPivot",
-            "label": "對失業困難表達理解與共情",
-            "next_sub_stage": "SubStage_3_2_FinancialProfiling",
-            "handles_rfd": ["RFD_InvoluntaryUnemployment"]
+            "category_id": "Flow_Unemployment",
+            "parent_master_stage": "S3_NeedsDiscovery",
+            "initial_sub_step": "SubStep_Empathy_Verify"
+          }}
+        ],
+        "sub_steps": [
+          {{
+            "sub_step_id": "SubStep_Empathy_Verify",
+            "parent_category": "Flow_Unemployment",
+            "extracted_info": ["失业"],
+            "next_sub_step": "SubStep_Hardship_Pitch"
           }},
           {{
-            "substage_id": "SubStage_3_2_FinancialProfiling",
-            "label": "評估失業後資金流動性",
-            "next_sub_stage": "SubStage_3_3_CardUtility",
-            "handles_rfd": ["RFD_InvoluntaryUnemployment"]
+            "sub_step_id": "SubStep_Hardship_Pitch",
+            "parent_category": "Flow_Unemployment",
+            "extracted_info": ["申请减免违约金"],
+            "next_sub_step": "SubStep_Micro_Commitment"
           }},
           {{
-            "substage_id": "SubStage_3_3_CardUtility",
-            "label": "指引還款渠道並保留憑證",
-            "rejoins_master_stage": "Stage_5_WorkoutSolution",
-            "yields_outcome": ["ForbearanceAgreement"]
+            "sub_step_id": "SubStep_Micro_Commitment",
+            "parent_category": "Flow_Unemployment",
+            "extracted_info": ["承诺明天还515元"],
+            "next_sub_step": null,
+            "rejoins_master_stage": "S5_ArrangementNegotiation"
           }}
         ],
         "compliance_artifacts": [
-          {{ "artifact_id": "Req_Verification", "label": "本人身份確認" }},
-          {{ "artifact_id": "Req_MiniMiranda",  "label": "錄音告知聲明" }}
+          {{ "artifact_id": "Compliance_Verification", "satisfied_in_stage": "S1_RPCVerification" }},
+          {{ "artifact_id": "Compliance_Disclosure",   "satisfied_in_stage": "S1_RPCVerification" }}
+        ],
+        "objections_raised": [
+          {{
+            "objection_id": "Objection_Financial_Hardship",
+            "triggered_in_step": "S3_NeedsDiscovery"
+          }}
         ]
       }}
 
-      催收對話內容:
-      `{chunk}`
+      ============================================================
+      【示例 2：路径 B —— 施压后挂断，未进入 S5】
+      ============================================================
 
+      {{
+        "master_stages": [
+          {{
+            "stage_id": "S1_RPCVerification",
+            "next_master_stage": "S2_BalanceDisclosure",
+            "required_compliance": ["Compliance_Verification", "Compliance_Disclosure"]
+          }},
+          {{
+            "stage_id": "S2_BalanceDisclosure",
+            "next_master_stage": "S3_NeedsDiscovery"
+          }},
+          {{
+            "stage_id": "S3_NeedsDiscovery",
+            "next_master_stage": "S4_UrgencyCreation",
+            "branches_to_category": "Flow_Unemployment"
+          }},
+          {{
+            "stage_id": "S4_UrgencyCreation",
+            "next_master_stage": "S8_ProfessionalInterruption"
+          }},
+          {{
+            "stage_id": "S8_ProfessionalInterruption",
+            "next_master_stage": null
+          }}
+        ],
+        "subflow_categories": [
+          {{
+            "category_id": "Flow_Unemployment",
+            "parent_master_stage": "S3_NeedsDiscovery",
+            "initial_sub_step": "SubStep_Empathy_Verify"
+          }}
+        ],
+        "sub_steps": [
+          {{
+            "sub_step_id": "SubStep_Empathy_Verify",
+            "parent_category": "Flow_Unemployment",
+            "extracted_info": ["客户敷衍未承诺"],
+            "next_sub_step": null,
+            "rejoins_master_stage": "S4_UrgencyCreation"
+          }}
+        ],
+        "compliance_artifacts": [
+          {{ "artifact_id": "Compliance_Verification", "satisfied_in_stage": "S1_RPCVerification" }},
+          {{ "artifact_id": "Compliance_Disclosure",   "satisfied_in_stage": "S1_RPCVerification" }}
+        ],
+        "objections_raised": [
+          {{
+            "objection_id": "Objection_Financial_Hardship",
+            "triggered_in_step": "S3_NeedsDiscovery"
+          }}
+        ]
+      }}
+
+      ============================================================
+      【示例 3：路径 B 变体 —— 客户不便，以 S8 收尾，无子流程】
+      ============================================================
+
+      {{
+        "master_stages": [
+          {{
+            "stage_id": "S1_RPCVerification",
+            "next_master_stage": "S2_BalanceDisclosure",
+            "required_compliance": ["Compliance_Verification", "Compliance_Disclosure"]
+          }},
+          {{
+            "stage_id": "S2_BalanceDisclosure",
+            "next_master_stage": "S3_NeedsDiscovery"
+          }},
+          {{
+            "stage_id": "S3_NeedsDiscovery",
+            "next_master_stage": "S8_ProfessionalInterruption"
+          }},
+          {{
+            "stage_id": "S8_ProfessionalInterruption",
+            "next_master_stage": null
+          }}
+        ],
+        "subflow_categories": [],
+        "sub_steps": [],
+        "compliance_artifacts": [
+          {{ "artifact_id": "Compliance_Verification", "satisfied_in_stage": "S1_RPCVerification" }},
+          {{ "artifact_id": "Compliance_Disclosure",   "satisfied_in_stage": "S1_RPCVerification" }}
+        ],
+        "objections_raised": []
+      }}
+
+      催收对话内容:
+      `{chunk}`
+      
   decomposition:
     general: "You are a professional question decomposition expert specializing in\
       \ multi-hop reasoning.\nGiven the following ontology and the question, decompose\
@@ -646,7 +612,7 @@ prompts:
 
       3. 决策规则
       - 若信息足够生成下一句催收员话术，则在最后以新段落 `FINAL_ANSWER:` 开头，只输出催收员话术。
-      - 若信息不足，则在最后以新段落 `NEW_QUERIES:` 开头，只输出 1-5 条具体检索查询。
+      - 若信息不足，则在最后以新段落 `NEW_QUERIES:` 开头，只输出 1-3 条具体检索查询。
       - 不要同时输出 `FINAL_ANSWER:` 和 `NEW_QUERIES:`。
       - 若当前步骤 {step} 已达到最大迭代轮次，例如 5 轮，必须输出 `FINAL_ANSWER:`。
 
@@ -660,7 +626,7 @@ prompts:
       - 若输出最终答案，格式为：
 
       若需要继续检索，格式为：
-      
+
       FINAL_ANSWER:
       催收员：……
 
@@ -688,7 +654,7 @@ retrieval:
   agent:
     enable_ircot: false
     enable_parallel_subquestions: true
-    max_steps: 5
+    max_steps: 1
   cache_dir: retriever/faiss_cache_new
   enable_caching: true
   enable_high_recall: true
