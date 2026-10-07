@@ -5,7 +5,7 @@ import threading
 import time
 from functools import lru_cache
 from typing import Dict, List, Optional, Set, Tuple
-
+import ast
 import faiss
 import numpy as np
 import spacy
@@ -1790,8 +1790,8 @@ class KTRetriever:
     def _get_node_chunk_id(self, node_data: dict) -> str:
         """Extract chunk ID from node data, handling both old and new structures."""
         if isinstance(node_data.get("properties"), dict):
-            return node_data["properties"].get("chunk id")
-        return node_data.get("chunk id")
+            return node_data["properties"].get("provenance")
+        return node_data.get("provenance")
 
     def _get_matching_chunks(self, chunk_ids: set) -> List[str]:
         """Get chunk contents for given chunk IDs."""
@@ -1986,61 +1986,37 @@ class KTRetriever:
         logger.info(f"Answer: {answer}")
         return answer
 
-    def _extract_chunk_ids_from_nodes(self, nodes: List[str]) -> set:
-        """Extract chunk IDs from node IDs."""
-        chunk_ids = set()
+    def _extract_chunk_ids_from_nodes(self, nodes: List[str]) -> List[str]:
+        """Extract, flatten (unnest), and dedupe chunk IDs from node IDs."""
+        flat: dict[str, None] = {}
 
         for node in nodes:
+            if node not in self.graph.nodes:
+                logger.warning(f"Debug: Node {node} not found in graph")
+                continue
             try:
-                if node in self.graph.nodes:
-                    data = self.graph.nodes[node]
-                    chunk_id = (
-                        data.get("properties", {}).get("chunk id")
-                        if isinstance(data.get("properties"), dict)
-                        else data.get("chunk id")
-                    )
-                    if chunk_id:
-                        chunk_ids.add(str(chunk_id))
-                    else:
-                        logger.warning(f"Debug: No chunk ID found for node {node}")
-                else:
-                    logger.warning(f"Debug: Node {node} not found in graph")
+                data = self.graph.nodes[node]
+                props = data.get("properties")
+                raw = props.get("chunk_id") if isinstance(props, dict) else data.get("chunk_id")
+                if not raw:
+                    logger.warning(f"Debug: No chunk ID found for node {node}")
+                    continue
+
+                for item in raw:
+                    # item is a stringified list like "['a', 'b']"
+                    try:
+                        parsed = ast.literal_eval(item)
+                    except (ValueError, SyntaxError):
+                        parsed = item
+                    ids = parsed if isinstance(parsed, (list, tuple, set)) else [parsed]
+                    for cid in ids:
+                        flat.setdefault(str(cid), None)
+
             except Exception as e:
                 logger.error(f"Debug: Error processing node {node}: {str(e)}")
-                continue
 
-        return chunk_ids
+        return sorted(flat)
 
-    def _extract_chunk_ids_from_triple_nodes(
-        self, scored_triples: List[Tuple[str, str, str, float]]
-    ) -> set:
-        """Extract chunk IDs from scored triples."""
-        chunk_ids = set()
-
-        for h, r, t, score in scored_triples:
-            try:
-                if h in self.graph.nodes:
-                    data = self.graph.nodes[h]
-                    chunk_id = (
-                        data.get("properties", {}).get("chunk id")
-                        if isinstance(data.get("properties"), dict)
-                        else data.get("chunk id")
-                    )
-                    if chunk_id:
-                        chunk_ids.add(str(chunk_id))
-                if t in self.graph.nodes:
-                    data = self.graph.nodes[t]
-                    chunk_id = (
-                        data.get("properties", {}).get("chunk id")
-                        if isinstance(data.get("properties"), dict)
-                        else data.get("chunk id")
-                    )
-                    if chunk_id:
-                        chunk_ids.add(str(chunk_id))
-            except Exception:
-                continue
-
-        return chunk_ids
 
     def _enhance_query_with_entities(self, question: str) -> str:
         """Enhance query by extracting entities and relations using spaCy NER."""

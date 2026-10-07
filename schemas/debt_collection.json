@@ -22,7 +22,6 @@
   "Attributes": [
     "name",
     "class",
-    "provenance",
     "stage_id",
     "category_id",
     "sub_step_id",

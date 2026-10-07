@@ -1,3 +1,4 @@
+# schemas/debt_collection.py
 """
 M1 Debt Recovery SOP Ontology — Fully Connected Graph Models (Pydantic v2)
 
@@ -235,10 +236,10 @@ class ComplianceArtifact(BaseModel):
     model_config = ConfigDict(graph_id_fields=["artifact_id"])
 
     artifact_id: ComplianceArtifactEnum = Field(..., description="合规检查点类型。")
-    satisfied_in_stage: Optional[Union[MasterStageEnum, SubStepEnum]] = Edge(
+    satisfied_in_stage: Optional[Union[MasterStageEnum]] = Edge(
         label="satisfiedInStage",
         default=None,
-        description="该合规项被满足的阶段或子步骤，必须存在于 master_stages 或 sub_steps 中。",
+        description="该合规项被满足的阶段或子步骤，必须存在于 master_stages 中。",
     )
 
 
@@ -346,10 +347,10 @@ class Objection(BaseModel):
 
 
 # =============================================================================
-# Root Extraction Model
+# Root Extraction Model  - Default to DataExtraction
 # =============================================================================
 
-class DebtCollectionExtraction(BaseModel):
+class DataExtraction(BaseModel):
     """通话结构化抽取的根对象。
 
     生成顺序建议：

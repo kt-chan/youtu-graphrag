@@ -6,13 +6,6 @@ system:
 construction:
   chunk_size: 5000
   datasets_no_chunk:
-  - hotpot
-  - 2wiki
-  - musique
-  - graphrag-bench
-  - annoy_chs
-  - annoy_eng
-  - demo
   - debt_collection
   max_workers: 10
   mode: agent  # set noagent to speed up
@@ -443,7 +436,7 @@ prompts:
 
       催收对话内容:
       `{chunk}`
-      
+
   decomposition:
     general: "You are a professional question decomposition expert specializing in\
       \ multi-hop reasoning.\nGiven the following ontology and the question, decompose\
@@ -472,7 +465,81 @@ prompts:
       \           {{\\\"sub-question\\\": \\\"智取生辰纲中的PERSON、LOCATION有什么特殊属性？\\\"}}\n       ],\n       \\\"involved_types\\\": {{\n           \\\"nodes\\\": [\\\"person\\\", \\\"event\\\", \\\"location\\\"],\n           \\\"relations\\\": [\\\"策划\\\", \\\"发生地\\\"],\n           \\\"attributes\\\": [\\\"绰号\\\", \\\"职位\\\", \\\"特长\\\"]\n       }}\n   }}\n   如果是简单问题，返回原始问题作为单个子问题。\n\
       \   原始问题：\\\"智取生辰纲事件中，PERSON#1是谁\\\"\n   输出：\n   {{\n       \\\"sub_questions\\\": [\n           {{\\\"sub-question\\\": \\\"\
       智取生辰纲事件中，PERSON#1是谁？\\\"}}\n       ],\n       \\\"involved_types\\\": {{\n           \\\"nodes\\\": [\\\"person\\\", \\\"event\\\"],\n           \\\"relations\\\": [\\\"参与\\\"],\n           \\\"attributes\\\": [\\\"name\\\"]\n       }}\n   }}\n"
-    debt_collection: "你是信用卡催收对话问答分解专家。请根据以下债务催收本体模式，将问题分解为 2-3 个子问题，并识别涉及的 schema 类型。\n\n要求：\n1. 每个子问题必须：\n   - 明确且专注于一个事实或关系，识别所有实体、关系和推理步骤\n   - 明确引用原始问题中的实体和关系\n   - 设计为检索最终答案所需的相关知识\n2. 对于简单问题（1-2 跳），返回原始问题作为单个子问题\n3. 分析问题并识别所有可能涉及的 schema 类型\n4. 返回一个 JSON 对象，包含 sub_questions 数组和 involved_types 对象。\n\n问题：{question}\n\n图本体模式：{ontology}\n\n示例：\n原始问题：\"在 M1 逾期且失业的客户中，哪些说服策略对 Worried 型债务人最有效？\"\n输出：\n{{\n  \"sub_questions\": [\n    {{\"sub-question\": \"M1 逾期且失业的客户通常表现出哪些债务人画像？\"}},\n    {{\"sub-question\": \"Worried 型债务人容易接受哪些说服策略？\"}},\n    {{\"sub-question\": \"哪些说服策略在失业导致的财务困难场景中成功促成了还款承诺？\"}}\n  ],\n  \"involved_types\": {{\n    \"nodes\": [\"debtor_persona\", \"persuasion_strategy\", \"objection_category\", \"payment_commitment\"],\n    \"relations\": [\"susceptible_to\", \"triggered_in_stage\", \"resolved_by\", \"made_by\"],\n    \"attributes\": [\"persona_type\", \"principle_type\", \"objection_type\", \"commitment_status\"]\n  }}\n}}\n\n如果是简单问题，返回原始问题作为单个子问题。\n原始问题：\"客户本次逾期的原因是什么？\"\n输出：\n{{\n  \"sub_questions\": [\n    {{\"sub-question\": \"客户本次逾期的原因是什么？\"}}\n  ],\n  \"involved_types\": {{\n    \"nodes\": [\"hardship_event\", \"objection_category\"],\n    \"relations\": [\"caused_by\"],\n    \"attributes\": [\"hardship_type\"]\n  }}\n}}\n"
+    debt_collection: |
+      你是 GraphRAG 债务催收对话问答分解专家。你的任务是：根据给定的债务催收 SOP 本体模式，将文末提供的原始问题或催收通话片段分解为 1-3 个子问题，并识别每个子问题需要检索的图谱 schema 类型。
+
+      【输入】
+      债务催收本体模式：
+      {schema}
+
+      【分解要求】
+      1. 子问题必须聚焦于一个明确的事实、关系或推理步骤。
+      2. 子问题必须显式引用原始问题中的实体、阶段、异议、子流程或合规点。
+      3. 子问题应设计为可通过 GraphRAG 图谱检索回答，优先检索节点、关系和属性。
+      4. 如果问题很简单，只需 1 跳即可回答，则直接返回原始问题作为唯一子问题。
+      5. 如果问题复杂，返回 2-3 个子问题，按推理顺序排列。
+      6. involved_types 必须严格从给定本体模式中选择，禁止发明本体之外的类型。
+      7. nodes 填节点类型标签，不是具体实例 ID；relations 填关系名；attributes 填属性名。
+      8. 如果某类无法确定，返回空数组 []。
+      9. 只输出合法 JSON，不要输出 Markdown、解释或多余文字。
+
+      【输出格式】
+      {{
+        "sub_questions": [
+          {{"sub-question": "子问题 1"}},
+          {{"sub-question": "子问题 2"}}
+        ],
+        "involved_types": {{
+          "nodes": ["节点类型"],
+          "relations": ["关系名"],
+          "attributes": ["属性名"]
+        }}
+      }}
+
+      【示例 1：复杂通话片段】
+      原始问题：
+      催收员：您好，请问是陈女士吗？这里是招商银行信用卡中心，本次通话可能录音。
+      客户：是我，你说。
+      催收员：您名下信用卡目前 M1 逾期，已出账单最低还款额是 1860 元，您知道吗？
+      客户：我知道，我上个月被公司裁员了，现在失业，手头真的很紧。
+      催收员：理解，您之前还款一直比较正常，这次应该是临时困难。
+      客户：那我能不能晚点还？我现在连生活费都紧张。
+
+      输出：
+      {{
+        "sub_questions": [
+          {{"sub-question": "本次通话是否完成 S1_RPCVerification 与 S2_BalanceDisclosure，并进入 S3_NeedsDiscovery？"}},
+          {{"sub-question": "客户“上个月被公司裁员，现在失业，手头紧”的表述触发了哪个 Objection，并进入哪个 SubflowCategory？"}},
+          {{"sub-question": "本次通话中哪些 ComplianceArtifact 被满足，分别 satisfiedInStage 指向哪些 MasterStage 或 SubStep？"}}
+        ],
+        "involved_types": {{
+          "nodes": ["MasterStage", "SubflowCategory", "SubStep", "ComplianceArtifact", "Objection"],
+          "relations": ["nextMasterStage", "branchesToCategory", "requiresCompliance", "satisfiedInStage", "triggeredInStep", "parentCategory"],
+          "attributes": ["stage_id", "category_id", "sub_step_id", "artifact_id", "objection_id", "extracted_info"]
+        }}
+      }}
+
+      【示例 2：简单问题】
+      原始问题：
+      客户本次逾期的原因是什么？
+
+      输出：
+      {{
+        "sub_questions": [
+          {{"sub-question": "客户本次逾期的原因是什么？"}}
+        ],
+        "involved_types": {{
+          "nodes": ["Objection", "SubflowCategory", "SubStep"],
+          "relations": ["triggeredInStep", "branchesToCategory", "parentCategory"],
+          "attributes": ["objection_id", "category_id", "sub_step_id", "extracted_info"]
+        }}
+      }}
+
+      现在请根据上述规则处理以下的原始问题或催收通话片段，并只返回 JSON。
+
+      原始问题或催收通话片段：
+      {question}
+
   retrieval:
     general: 'You are an expert knowledge assistant. Your task is to answer the question
       based on the provided knowledge context.

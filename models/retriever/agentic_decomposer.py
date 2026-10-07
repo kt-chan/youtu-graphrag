@@ -1,6 +1,11 @@
 # models/retriever/agentic_decomposer.py
+from typing import Type
+
 import json_repair
+from pydantic import BaseModel
+from schemas.debt_collection import DataExtraction
 from utils import call_llm_api
+from utils.schema_utils import serialize_pydantic_schema
 
 try:
     from config import get_config
@@ -19,6 +24,7 @@ class GraphQ:
             self.config = config
         self.llm_client = call_llm_api.LLMCompletionCall()
         self.dataset_name = dataset_name
+        self.pydantic_model: Type[BaseModel] = DataExtraction
 
     def read_schema(self, schema_path: str) -> str:
         with open(schema_path, "r") as f:
@@ -39,7 +45,7 @@ class GraphQ:
                     continue
                 try:
                     prompt = self.config.get_prompt_formatted(
-                        "decomposition", key, ontology=schema, question=question
+                        "decomposition", key, schema=schema, question=question
                     )
                 except Exception:
                     continue
@@ -77,7 +83,7 @@ class GraphQ:
         """
 
     def decompose(self, question: str, schema_path: str) -> dict:
-        schema = self.read_schema(schema_path)
+        schema = serialize_pydantic_schema(self.pydantic_model)
         prompt = self.prompt_format(schema, question)
         response = self.llm_client.call_api(prompt)
         content = json_repair.loads(response)

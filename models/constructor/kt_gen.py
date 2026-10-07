@@ -45,7 +45,7 @@ import tiktoken
 from pydantic import BaseModel, ValidationError
 
 from config import ConfigManager, get_config
-from schemas.debt_collection import DebtCollectionExtraction, GraphNodeEnum
+from schemas.debt_collection import DataExtraction, GraphNodeEnum
 from utils import call_llm_api, graph_processor, tree_comm
 from utils.checkpoint import (
     checkpoint_exists as _ckpt_exists,
@@ -55,6 +55,7 @@ from utils.checkpoint import (
 )
 from utils.chunking import TextChunker, stable_chunk_id
 from utils.llm_cache import LLMResponseCache
+from utils.schema_utils import serialize_pydantic_schema
 
 # ── CHANGED ── import the LLM-exchange logger helper alongside `logger`.
 from utils.logger import logger, log_llm_exchange
@@ -63,24 +64,6 @@ from utils.logger import logger, log_llm_exchange
 # =============================================================================
 # Prompt building (pydantic-only)
 # =============================================================================
-@lru_cache(maxsize=8)
-def _serialize_pydantic_schema(model: Type[BaseModel]) -> str:
-    """序列化 Pydantic schema，并把 GraphNodeEnum 的中文说明注入
-    `x-enum-descriptions`，使 DeepSeek / GLM 在 prompt 中直接看到每个
-    枚举值的适用场景与决策建议。"""
-    schema = model.model_json_schema()
-
-    for defn in schema.get("$defs", {}).values():
-        values = defn.get("enum")
-        if not values:
-            continue
-        descs = {v: d for v in values if (d := GraphNodeEnum.description_for(v))}
-        if descs:
-            defn["x-enum-descriptions"] = descs
-
-    return json.dumps(schema, ensure_ascii=False, indent=2)
-
-
 def _build_construction_prompt(
     config: ConfigManager,
     dataset_name: str,
@@ -102,7 +85,7 @@ def _build_construction_prompt(
             f"'{candidate}' or fallback 'debt_collection_agent_pydantic'."
         )
 
-    schema_str = _serialize_pydantic_schema(pydantic_model)
+    schema_str = serialize_pydantic_schema(pydantic_model)
     return config.get_prompt_formatted(
         "construction", prompt_type, schema=schema_str, chunk=chunk
     )
@@ -337,10 +320,10 @@ class GraphWalker:
 def _append_provenance(graph: nx.MultiDiGraph, node_id: str, chunk_id: str) -> None:
     """Append chunk_id to a node's provenance list, deduping."""
     props = graph.nodes[node_id].get("properties", {})
-    prov = list(props.get("provenance", []))
-    if chunk_id not in prov:
-        prov.append(chunk_id)
-        props["provenance"] = prov
+    chunk_ids = list(props.get("chunk_id", []))
+    if chunk_id not in chunk_ids:
+        chunk_ids.append(chunk_id)
+        props["chunk_id"] = chunk_ids
         graph.nodes[node_id]["properties"] = props
 
 
@@ -374,7 +357,7 @@ def merge_nodes_and_edges(
             metrics["nodes_emitted"] = metrics.get("nodes_emitted", 0) + 1
             props = dict(hint_data["properties"])
             if chunk_id is not None:
-                props["provenance"] = [chunk_id]
+                props["chunk_id"] = [chunk_id]
             graph.add_node(node_id, **{**hint_data, "properties": props})
         elif chunk_id is not None:
             _append_provenance(graph, node_id, chunk_id)
@@ -388,18 +371,18 @@ def merge_nodes_and_edges(
             incoming = node_data["properties"]
             merged = {**existing, **incoming}
 
-            prov = list(existing.get("provenance", []))
-            if chunk_id is not None and chunk_id not in prov:
-                prov.append(chunk_id)
-            if prov:
-                merged["provenance"] = prov
+            chunk_ids = list(existing.get("chunk_id", []))
+            if chunk_id is not None and chunk_id not in chunk_ids:
+                chunk_ids.append(chunk_id)
+            if chunk_ids:
+                merged["chunk_id"] = chunk_ids
 
             graph.nodes[node_id]["properties"] = merged
             graph.nodes[node_id]["level"] = node_data.get("level", 2)
         else:
             props = dict(node_data["properties"])
             if chunk_id is not None:
-                props["provenance"] = [chunk_id]
+                props["chunk_id"] = [chunk_id]
             graph.add_node(node_id, **{**node_data, "properties": props})
 
     # ── 3) Edges ─────────────────────────────────────────────────────────
@@ -409,7 +392,7 @@ def merge_nodes_and_edges(
             u,
             v,
             relation=relation,
-            provenance=[chunk_id] if chunk_id is not None else [],
+            chunk_id=[chunk_id] if chunk_id is not None else [],
         )
 
 
@@ -427,21 +410,21 @@ def triple_deduplicate(graph: nx.MultiDiGraph) -> nx.MultiDiGraph:
         relation = data.get("relation")
         group_key = (u, v, relation)
 
-        prov = list(data.get("provenance", []))
+        chunk_ids = list(data.get("chunk_id", []))
         if group_key in grouped:
-            for cid in prov:
+            for cid in chunk_ids:
                 if cid and cid not in grouped[group_key]:
                     grouped[group_key].append(cid)
         else:
-            grouped[group_key] = prov
+            grouped[group_key] = chunk_ids
             seen_attrs[group_key] = {
-                k: val for k, val in data.items() if k not in ("provenance", "relation")
+                k: val for k, val in data.items() if k not in ("chunk_id", "relation")
             }
 
-    for (u, v, relation), prov in grouped.items():
+    for (u, v, relation), chunk_ids in grouped.items():
         attrs = dict(seen_attrs.get((u, v, relation), {}))
         attrs["relation"] = relation
-        attrs["provenance"] = prov
+        attrs["chunk_id"] = chunk_ids
         new_graph.add_edge(u, v, **attrs)
 
     return new_graph
@@ -459,7 +442,7 @@ def format_output(graph: nx.MultiDiGraph) -> List[Dict[str, Any]]:
                     "properties": u_data["properties"],
                 },
                 "relation": data["relation"],
-                "provenance": data.get("provenance", []),
+                "chunk_id": data.get("chunk_id", []),
                 "end_node": {
                     "label": v_data["label"],
                     "properties": v_data["properties"],
@@ -477,7 +460,7 @@ def log_graph_stats(graph: nx.MultiDiGraph, prefix: str = "") -> None:
 
     class_counts: Dict[str, int] = {}
     level_counts: Dict[int, int] = {}
-    provenance_lengths: List[int] = []
+    chunk_lengths: List[int] = []
 
     for _, d in graph.nodes(data=True):
         cls = d.get("properties", {}).get("class") or d.get("label", "?")
@@ -485,9 +468,9 @@ def log_graph_stats(graph: nx.MultiDiGraph, prefix: str = "") -> None:
         lvl = d.get("level", -1)
         level_counts[lvl] = level_counts.get(lvl, 0) + 1
 
-        prov = d.get("properties", {}).get("provenance")
-        if prov:
-            provenance_lengths.append(len(prov))
+        chunk_id = d.get("properties", {}).get("chunk_id")
+        if chunk_id:
+            chunk_lengths.append(len(chunk_id))
 
     logger.info(
         f"{prefix}Graph stats: nodes={n_nodes}, edges={n_edges}, "
@@ -507,11 +490,11 @@ def log_graph_stats(graph: nx.MultiDiGraph, prefix: str = "") -> None:
             f"isolated={sum(1 for d in degrees if d == 0)}"
         )
 
-    if provenance_lengths:
+    if chunk_lengths:
         logger.info(
-            f"{prefix}Provenance: nodes_with_prov={len(provenance_lengths)}, "
-            f"max_chunks_per_node={max(provenance_lengths)}, "
-            f"median={statistics.median(provenance_lengths):.1f}"
+            f"{prefix}Provenance: nodes_with_prov={len(chunk_lengths)}, "
+            f"max_chunks_per_node={max(chunk_lengths)}, "
+            f"median={statistics.median(chunk_lengths):.1f}"
         )
 
 
@@ -553,7 +536,6 @@ class KTBuilder:
         schema_path: Optional[str] = None,
         mode: Optional[str] = None,
         config=None,
-        pydantic_model: Optional[Type[BaseModel]] = None,
     ):
         if config is None:
             config = get_config()
@@ -575,9 +557,7 @@ class KTBuilder:
         self.all_chunks: Dict[str, str] = {}
 
         self.mode = mode or config.construction.mode
-        self.pydantic_model: Type[BaseModel] = (
-            pydantic_model if pydantic_model is not None else DebtCollectionExtraction
-        )
+        self.pydantic_model: Type[BaseModel] = DataExtraction
 
         # ── Composed helpers ─────────────────────────────────────────────
         self.walker = GraphWalker()
