@@ -208,7 +208,6 @@ class KTRetriever:
     # Config-driven prompt resolution
     # ------------------------------------------------------------------
 
-
     def _resolve_prompt(
         self, category: str, *keys: Optional[str], **kwargs
     ) -> Optional[str]:
@@ -230,7 +229,8 @@ class KTRetriever:
                 prompt = self.config.get_prompt_formatted(category, key, **kwargs)
             except Exception as e:
                 logger.debug(
-                    f"prompt lookup miss: {category}.{key} " f"({type(e).__name__}: {e})"
+                    f"prompt lookup miss: {category}.{key} "
+                    f"({type(e).__name__}: {e})"
                 )
                 continue
             if prompt:
@@ -238,16 +238,13 @@ class KTRetriever:
                 return prompt
         return None
 
-
-    def _ircot_key(self) -> Optional[str]:
-        """Dataset-specific IRCoT key (e.g. ``debt_collection_ircot``)."""
-        return f"{self.dataset}_ircot" if self.dataset else None
-
+    def _key(self) -> Optional[str]:
+        """Dataset-specific key (e.g. ``debt_collection``)."""
+        return f"{self.dataset}" if self.dataset else "general"
 
     # ------------------------------------------------------------------
     # Plain retrieval prompt
     # ------------------------------------------------------------------
-
 
     def generate_prompt(self, question: str, context: str) -> str:
         """Plain (non-IRCoT) retrieval prompt for the initial answer attempt.
@@ -272,19 +269,15 @@ class KTRetriever:
         )
         return self._builtin_plain_prompt(question, context)
 
-
     # ------------------------------------------------------------------
     # IRCoT prompt
     # ------------------------------------------------------------------
-
 
     def generate_ircot_prompt(
         self,
         initial_query: str,
         current_query: str,
         context: str,
-        previous_thoughts: str = "None",
-        step: int = 1,
     ) -> str:
         """IRCoT reasoning prompt.
 
@@ -299,27 +292,26 @@ class KTRetriever:
         """
         prompt = self._resolve_prompt(
             "retrieval",
-            self._ircot_key(),
-            "ircot",
+            self._key(),
             initial_query=initial_query,
             current_query=current_query,
             context=context,
-            previous_thoughts=previous_thoughts,
-            step=step,
         )
+        
         if prompt is not None:
             return prompt
         logger.warning(
-            f"No config prompt at retrieval.{self._ircot_key()}/ircot; "
+            f"No config prompt at retrieval.{self._key()}/ircot; "
             "using built-in fallback."
         )
-        return self._builtin_ircot_prompt(current_query, context, previous_thoughts, step)
-
+        
+        return self._builtin_ircot_prompt(
+            current_query, context
+        )
 
     # ------------------------------------------------------------------
     # Built-in fallbacks (config-less / misconfigured YAML only)
     # ------------------------------------------------------------------
-
 
     @staticmethod
     def _builtin_plain_prompt(question: str, context: str) -> str:
@@ -337,19 +329,14 @@ class KTRetriever:
             "Answer (be specific and direct):\n"
         )
 
-
     @staticmethod
     def _builtin_ircot_prompt(
-        current_query: str, context: str, previous_thoughts: str, step: int
+        current_query: str, context: str
     ) -> str:
         return (
             "You are an expert knowledge assistant using iterative retrieval "
             "with chain-of-thought reasoning.\n\n"
             f"Current Question: {current_query}\n\n"
-            f"Available Knowledge Context:\n{context}\n\n"
-            f"Previous Thoughts: {previous_thoughts}\n\n"
-            f"Step {step}: Please think step by step about what additional "
-            "information you need to answer the question completely and accurately.\n\n"
             "Instructions:\n"
             "1. Analyze the current knowledge context and the question\n"
             "2. Think about what information might be missing or unclear\n"
@@ -848,34 +835,32 @@ class KTRetriever:
 
         return question_embed, result
 
-    def retrieve_with_type_filtering(
-        self, question: str, involved_types: dict = None
-    ) -> Dict:
-        """Enhanced retrieval with type-based filtering followed by similarity search."""
-        start_time = time.time()
-
+    def retrieve_with_type_filtering(self, question: str, involved_types: dict = None) -> Dict:
         question_embed = self._get_query_embedding(question)
-        query_time = time.time() - start_time
 
-        if involved_types and any(
-            involved_types.get(k, []) for k in ["nodes", "relations", "attributes"]
-        ):
-            type_start = time.time()
-            type_filtered_results = self._type_based_retrieval(
-                question_embed, question, involved_types
-            )
-            type_filtering_time = time.time() - type_start
-            logger.info(
-                f"Query encoding: {query_time:.3f}s, Type-based retrieval: {type_filtering_time:.3f}s"
-            )
+        if not (involved_types and any(involved_types.get(k, []) for k in ("nodes", "relations", "attributes"))):
+            return question_embed, self.retrieve(question)[1]
 
-            return question_embed, type_filtered_results
-        else:
-            question_embed, original_results = self.retrieve(question)
-            logger.info(
-                f"Query encoding: {query_time:.3f}s, Fallback to original retrieval"
-            )
-            return question_embed, original_results
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+            f_filtered = ex.submit(self._type_based_retrieval, question_embed, question, involved_types)
+            f_full     = ex.submit(self._node_relation_retrieval, question_embed, question)
+
+            filtered = f_filtered.result()
+            full     = f_full.result()
+
+        # Merge: union of triples + union of chunk_results
+        merged_path1 = {
+            "top_nodes": list({*filtered["path1_results"]["top_nodes"],
+                            *full["top_nodes"]}),
+            "one_hop_triples": list({*filtered["path1_results"]["one_hop_triples"],
+                                    *full["one_hop_triples"]}),
+            "chunk_results": full.get("chunk_results"),
+        }
+
+        return question_embed, {
+            "path1_results": merged_path1,
+            "path2_results": filtered["path2_results"],
+        }
 
     def _type_based_retrieval(
         self, question_embed: torch.Tensor, question: str, involved_types: dict
@@ -934,28 +919,18 @@ class KTRetriever:
         if target_node_types:
             type_filtered_nodes = self._filter_nodes_by_schema_type(target_node_types)
             if type_filtered_nodes:
-                path1_results = self._type_filtered_node_relation_path(
-                    question_embed, type_filtered_nodes
-                )
+                path1_results = self._type_filtered_node_relation_path(question_embed, type_filtered_nodes)
             else:
+                logger.info("Type filter matched nothing; falling back to full node_relation retrieval.")
                 path1_results = self._node_relation_retrieval(question_embed, question)
         else:
             path1_results = self._node_relation_retrieval(question_embed, question)
 
         path2_results = self._triple_only_retrieval(question_embed)
 
-        all_chunk_ids = set()
-        path1_chunk_ids = self._extract_chunk_ids_from_nodes(path1_results["top_nodes"])
-        all_chunk_ids.update(path1_chunk_ids)
-
-        if "chunk_results" in path2_results and path2_results["chunk_results"]:
-            chunk_chunk_ids = set(path2_results["chunk_results"].get("chunk_ids", []))
-            all_chunk_ids.update(chunk_chunk_ids)
-
         result = {
             "path1_results": path1_results,
             "path2_results": path2_results,
-            "chunk_ids": list(all_chunk_ids),
         }
 
         return result
@@ -1036,34 +1011,40 @@ class KTRetriever:
         return {"top_nodes": top_filtered_nodes}
 
     def _get_one_hop_triples_from_nodes(self, node_list: list) -> list:
+        """Return 1-hop triples as (head_id, relation, tail_id) using graph keys.
+
+        Returning node IDs (not display names) is required downstream:
+        `_get_edge_chunk_ids`, `_get_node_text`, and `_get_node_properties` all
+        look nodes up by their graph key.  Display names are applied later by
+        `_format_scored_triples` via `_get_node_text`.
+        """
         one_hop_triples = []
         node_set = set(node_list)
-
         for u, v, data in self.graph.edges(data=True):
             if u in node_set or v in node_set:
                 relation = data.get("relation", "")
-                u_name = self._get_node_name(u)
-                v_name = self._get_node_name(v)
-                one_hop_triples.append((u_name, relation, v_name))
-
+                if relation:
+                    one_hop_triples.append((u, relation, v))
         return one_hop_triples[: self.top_k]
 
     def _filter_nodes_by_schema_type(self, target_types: list) -> list:
-        """Filter nodes based on their schema_type property."""
+        """Restrict to nodes whose declared class is in `target_types`.
+
+        kt_gen stores the node type under ``properties.class`` (the pydantic
+        model class name, e.g. ``MasterStage``); older graphs may use
+        ``schema_type``.  Matching either keeps both layouts working.
+        """
         if not target_types:
             return list(self.graph.nodes())
 
-        filtered_nodes = []
+        wanted = set(target_types)
+        filtered = []
         for node_id, node_data in self.graph.nodes(data=True):
-            node_properties = node_data.get("properties", {})
-            node_schema_type = node_properties.get("schema_type", "")
-
-            if node_schema_type in target_types:
-                filtered_nodes.append(node_id)
-            elif not node_schema_type and node_data.get("label") == "entity":
-                filtered_nodes.append(node_id)
-
-        return filtered_nodes
+            props = node_data.get("properties", {}) or {}
+            node_class = props.get("class") or props.get("schema_type") or ""
+            if node_class in wanted:
+                filtered.append(node_id)
+        return filtered
 
     def _get_node_name(self, node_id: str) -> str:
         """Get the name property of a node."""
@@ -1092,7 +1073,7 @@ class KTRetriever:
         start_time = time.time()
 
         path1_chunk_ids = self._extract_chunk_ids_from_nodes(path1_results["top_nodes"])
-        path2_chunk_ids = self._extract_chunk_ids_from_triple_nodes(
+        path2_chunk_ids = self._extract_chunk_ids_from_triples(
             path2_results["scored_triples"]
         )
 
@@ -1509,8 +1490,10 @@ class KTRetriever:
             "description",
             "properties",
             "label",
-            "chunk id",
+            "chunk_id",
             "level",
+            "class",
+            "value", 
         }
 
         for source in [data.get("properties", {}), data]:
@@ -1724,11 +1707,11 @@ class KTRetriever:
         """Collect and merge all scored triples from both paths."""
         all_scored_triples = []
 
-        path2_scored = results["path2_results"].get("scored_triples", [])
+        path2_scored = results.get("path2_results", {}).get("scored_triples", [])
         if path2_scored:
             all_scored_triples.extend(path2_scored)
 
-        path1_triples = results["path1_results"].get("one_hop_triples", [])
+        path1_triples = results.get("path1_results", {}).get("one_hop_triples", [])
         if path1_triples:
             path1_scored = self._rerank_triples_by_relevance(
                 path1_triples, question_embed
@@ -1738,73 +1721,127 @@ class KTRetriever:
         all_scored_triples.sort(key=lambda x: x[3], reverse=True)
         return all_scored_triples
 
-    def _format_scored_triples(
-        self, scored_triples: List[Tuple[str, str, str, float]]
-    ) -> List[str]:
-        """Format scored triples into readable text with node properties."""
+    def _format_scored_triples(self, scored_triples):
         formatted_triples = []
-
         for h, r, t, score in scored_triples:
             head_text = self._get_node_text(h)
             tail_text = self._get_node_text(t)
-
-            if (
-                not head_text
-                or not tail_text
-                or head_text.startswith("[Error")
-                or tail_text.startswith("[Error")
-            ):
+            if (not head_text or not tail_text
+                    or head_text.startswith("[Error")
+                    or tail_text.startswith("[Error")):
                 continue
 
             head_props = self._get_node_properties(h)
             tail_props = self._get_node_properties(t)
-            triple_text = (
-                f"({head_text} {head_props}, {r}, {tail_text} {tail_props}) "
-                f"[score: {score:.3f}]"
-            )
-            if "represented_by" == r or "kw_filter_by" == r:
-                continue
-            formatted_triples.append(triple_text)
 
+            # Edge-level provenance — this is the tight signal.
+            edge_chunks = self._get_edge_chunk_ids(h, t, r)
+            prov = f" [chunks: {', '.join(edge_chunks[:5])}" \
+                f"{'…' if len(edge_chunks) > 5 else ''}]" if edge_chunks else ""
+
+            if r in ("represented_by", "kw_filter_by"):
+                continue
+
+            formatted_triples.append(
+                f"({head_text} {head_props}, {r}, {tail_text} {tail_props}) [score: {score:.3f}]"
+            )
         return formatted_triples
+
+    def _get_edge_chunk_ids(self, u: str, v: str, relation: str) -> List[str]:
+        """Return chunk ids stored on all (u, v, relation) edges, deduped.
+
+        A MultiDiGraph may hold multiple parallel edges between the same pair
+        of nodes; kt_gen's `triple_deduplicate` normally collapses them to one,
+        but pre-dedup JSONs or hand-edited graphs may not be.  Aggregating
+        keeps the signal correct in either case.
+        """
+        if not self.graph.has_edge(u, v):
+            return []
+
+        edge_dict = self.graph.get_edge_data(u, v)  # {key: data} in MultiDiGraph
+        if not edge_dict:
+            return []
+
+        # Ordered set: dict preserves insertion order on 3.7+; we only use the keys.
+        seen: Dict[str, None] = {}
+        for _key, data in edge_dict.items():
+            if data.get("relation") != relation:
+                continue
+            for cid in data.get("chunk_id", []) or []:
+                if cid:
+                    seen.setdefault(str(cid), None)
+        return list(seen)
+
+    def _get_node_chunk_ids(self, node_data: dict) -> List[str]:
+        """Return chunk ids recorded on a node, handling both layouts.
+
+        kt_gen stores this under `properties.chunk_id` as a list of strings;
+        some graphs also un-nest stringified lists like "['a', 'b']".  Returns
+        a fresh list, never None, so callers can iterate unconditionally.
+        """
+        props = node_data.get("properties")
+        raw = (
+            props.get("chunk_id")
+            if isinstance(props, dict)
+            else node_data.get("chunk_id")
+        )
+        if not raw:
+            return []
+        if isinstance(raw, str):
+            raw = [raw]
+
+        out: List[str] = []
+        for item in raw:
+            try:
+                parsed = ast.literal_eval(item)
+            except (ValueError, SyntaxError):
+                parsed = item
+            if isinstance(parsed, (list, tuple, set)):
+                out.extend(str(c) for c in parsed if c)
+            elif parsed:
+                out.append(str(parsed))
+        return out
 
     def _extract_chunk_ids_from_triples(
         self, scored_triples: List[Tuple[str, str, str, float]]
     ) -> set:
-        """Extract chunk IDs from nodes in scored triples."""
-        chunk_ids = set()
+        """Extract chunk ids from scored triples, using EDGE provenance first.
 
-        for h, r, t, score in scored_triples:
-            if h in self.graph.nodes:
-                chunk_id = self._get_node_chunk_id(self.graph.nodes[h])
-                if chunk_id:
-                    chunk_ids.add(str(chunk_id))
+        Edge provenance is the set of chunks in which this exact (head,
+        relation, tail) transition happened.  Node provenance is used only as
+        a fallback for triples whose edge somehow lacks provenance.
+        """
+        chunk_ids: set = set()
 
-            if t in self.graph.nodes:
-                chunk_id = self._get_node_chunk_id(self.graph.nodes[t])
-                if chunk_id:
-                    chunk_ids.add(str(chunk_id))
+        for h, r, t, _score in scored_triples:
+            edge_chunks = self._get_edge_chunk_ids(h, t, r)
+            if edge_chunks:
+                chunk_ids.update(edge_chunks)
+                continue
+            # Fallback: node-level provenance (older graphs, or edges that
+            # were synthesised without provenance).
+            for node in (h, t):
+                if node in self.graph.nodes:
+                    chunk_ids.update(self._get_node_chunk_ids(self.graph.nodes[node]))
 
         return chunk_ids
 
-    def _get_node_chunk_id(self, node_data: dict) -> str:
-        """Extract chunk ID from node data, handling both old and new structures."""
-        if isinstance(node_data.get("properties"), dict):
-            return node_data["properties"].get("provenance")
-        return node_data.get("provenance")
+    def _get_matching_chunks(self, chunk_ids) -> Dict[str, str]:
+        """Return {chunk_id: text} for ids that exist in chunk2id.
 
-    def _get_matching_chunks(self, chunk_ids: set) -> List[str]:
-        """Get chunk contents for given chunk IDs."""
-        return [
-            self.chunk2id[chunk_id]
-            for chunk_id in chunk_ids
-            if chunk_id in self.chunk2id
-        ]
+        Returning a dict (not a parallel list) makes downstream index
+        alignment impossible to get wrong.
+        """
+        return {
+            cid: self.chunk2id[cid]
+            for cid in chunk_ids
+            if cid in self.chunk2id
+        }
 
     def process_retrieval_results(
         self, question: str, top_k: int = 20, involved_types: dict = None
     ) -> Tuple[Dict, float]:
-        """Process retrieval results with optimized structure and helper methods."""
+        """Process retrieval results with edge-provenance as the primary chunk signal."""
         start_time = time.time()
 
         if involved_types:
@@ -1817,25 +1854,37 @@ class KTRetriever:
         retrieval_time = time.time() - start_time
         logger.info(f"retrieval time: {retrieval_time:.4f}")
 
-        chunk_results = results["path1_results"].get("chunk_results")
-        chunk_retrieval_results, chunk_retrieval_ids = self._process_chunk_results(
-            chunk_results, question_embed, top_k
-        )
-
+        # ── Triples: rank and cap ────────────────────────────────────────────
         all_scored_triples = self._collect_all_scored_triples(results, question_embed)
         limited_scored_triples = all_scored_triples[:top_k]
-
         formatted_triples = self._format_scored_triples(limited_scored_triples)
-        triple_chunk_ids = self._extract_chunk_ids_from_triples(limited_scored_triples)
 
-        all_chunk_ids = chunk_retrieval_ids | triple_chunk_ids
-        matching_chunks = self._get_matching_chunks(all_chunk_ids)
+        # ── Chunks: EDGE provenance, ranked by multi-triple support ──────────
+        ranked_ids = self._rank_chunks_by_triple_support(limited_scored_triples, top_k)
+
+        if len(ranked_ids) > top_k:
+            selected_ids = self._semantic_rerank_within(
+                ranked_ids, question_embed, top_k
+            )
+        else:
+            selected_ids = ranked_ids
+
+        # ── Fallback: dense retrieval only when provenance is empty ──────────
+        if not selected_ids:
+            logger.info(
+                "No edge provenance produced chunks; falling back to dense retrieval."
+            )
+            selected_ids = self._dense_fallback(question_embed, top_k, results)
+
+        matched = self._get_matching_chunks(selected_ids)
+        final_ids      = list(matched.keys())           # iteration order preserved
+        final_contents = [matched[cid] for cid in final_ids]
 
         retrieval_results = {
             "triples": formatted_triples,
-            "chunk_ids": list(all_chunk_ids),
-            "chunk_contents": matching_chunks,
-            "chunk_retrieval_results": chunk_retrieval_results,
+            "chunk_ids": selected_ids,
+            "chunk_contents": final_contents,
+            "chunk_retrieval_results": [],  # deprecated field, kept for compat
         }
 
         return retrieval_results, retrieval_time
@@ -1983,40 +2032,18 @@ class KTRetriever:
         answer = self.llm_client.call_api(prompt)
         logger.info("Retrieved context:")
         logger.info(prompt)
-        logger.info(f"Answer: {answer}")
+        logger.info("Final Answer:")
+        logger.info(answer)
         return answer
 
     def _extract_chunk_ids_from_nodes(self, nodes: List[str]) -> List[str]:
-        """Extract, flatten (unnest), and dedupe chunk IDs from node IDs."""
-        flat: dict[str, None] = {}
-
+        flat: Dict[str, None] = {}
         for node in nodes:
             if node not in self.graph.nodes:
-                logger.warning(f"Debug: Node {node} not found in graph")
                 continue
-            try:
-                data = self.graph.nodes[node]
-                props = data.get("properties")
-                raw = props.get("chunk_id") if isinstance(props, dict) else data.get("chunk_id")
-                if not raw:
-                    logger.warning(f"Debug: No chunk ID found for node {node}")
-                    continue
-
-                for item in raw:
-                    # item is a stringified list like "['a', 'b']"
-                    try:
-                        parsed = ast.literal_eval(item)
-                    except (ValueError, SyntaxError):
-                        parsed = item
-                    ids = parsed if isinstance(parsed, (list, tuple, set)) else [parsed]
-                    for cid in ids:
-                        flat.setdefault(str(cid), None)
-
-            except Exception as e:
-                logger.error(f"Debug: Error processing node {node}: {str(e)}")
-
+            for cid in self._get_node_chunk_ids(self.graph.nodes[node]):
+                flat.setdefault(cid, None)
         return sorted(flat)
-
 
     def _enhance_query_with_entities(self, question: str) -> str:
         """Enhance query by extracting entities and relations using spaCy NER."""
@@ -2918,6 +2945,98 @@ class KTRetriever:
         except Exception as e:
             logger.exception("Error in chunk embedding retrieval")
             return {"chunk_ids": [], "scores": [], "chunk_contents": []}
+
+    def _rank_chunks_by_triple_support(
+        self,
+        scored_triples: List[Tuple[str, str, str, float]],
+        top_k: int,
+    ) -> List[str]:
+        """Rank chunk ids by how many top-k triples cite them (weighted by score).
+
+        A chunk cited by three high-scoring triples is preferred over a chunk
+        cited by one.  Ties broken by first-seen order (stable ordering).
+
+        Uses EDGE provenance.  This is the primary chunk signal for retrieval.
+        """
+        from collections import defaultdict
+
+        weighted: Dict[str, float] = defaultdict(float)
+        support: Dict[str, int] = defaultdict(int)
+        order: Dict[str, int] = {}
+
+        for h, r, t, score in scored_triples:
+            edge_chunks = self._get_edge_chunk_ids(h, t, r)
+            if not edge_chunks:
+                # No edge provenance — fall back to node provenance for this
+                # triple only, with a penalty so genuine edge hits outrank it.
+                edge_chunks = []
+                for node in (h, t):
+                    if node in self.graph.nodes:
+                        edge_chunks.extend(
+                            self._get_node_chunk_ids(self.graph.nodes[node])
+                        )
+
+            for cid in edge_chunks:
+                if cid not in order:
+                    order[cid] = len(order)
+                weighted[cid] += score
+                support[cid] += 1
+
+        ranked = sorted(
+            weighted.keys(),
+            key=lambda c: (-support[c], -weighted[c], order[c]),
+        )
+        return ranked[:top_k]
+
+    def _semantic_rerank_within(
+        self,
+        chunk_ids: List[str],
+        question_embed: torch.Tensor,
+        top_k: int,
+    ) -> List[str]:
+        """Rerank an existing candidate chunk-id list by cosine similarity.
+
+        Encodes ONLY the candidate chunks — not the whole corpus.  This is
+        cheap (dozens of chunks, not thousands) and only fires when the
+        provenance set is larger than `top_k`.
+        """
+        valid = [cid for cid in chunk_ids if cid in self.chunk2id]
+        if not valid:
+            return chunk_ids[:top_k]
+
+        texts = [self.chunk2id[cid] for cid in valid]
+        try:
+            embeds = self.qa_encoder.encode(texts, convert_to_tensor=True).to(
+                self.device
+            )
+            sims = F.cosine_similarity(question_embed.unsqueeze(0), embeds, dim=1)
+            order = sorted(range(len(valid)), key=lambda i: -sims[i].item())
+            return [valid[i] for i in order[:top_k]]
+        except Exception as e:
+            logger.warning(f"Semantic prune failed, using score order: {e}")
+            return valid[:top_k]
+
+    def _dense_fallback(
+        self,
+        question_embed: torch.Tensor,
+        top_k: int,
+        results: Dict,
+    ) -> List[str]:
+        """Fallback chunk signal when no triple produced edge provenance.
+
+        Preference order:
+        1. path1_results.chunk_results (present in non-type-filtered mode)
+        2. Direct _chunk_embedding_retrieval (works in every mode)
+        """
+        chunk_results = results.get("path1_results", {}).get("chunk_results")
+        if chunk_results:
+            _, dense_ids = self._process_chunk_results(
+                chunk_results, question_embed, top_k
+            )
+            return list(dense_ids)
+
+        dense = self._chunk_embedding_retrieval(question_embed, top_k)
+        return list(dense.get("chunk_ids", []))
 
     def _rerank_chunks_by_relevance(
         self, chunk_results: Dict, question_embed: torch.Tensor, top_k: int = 10

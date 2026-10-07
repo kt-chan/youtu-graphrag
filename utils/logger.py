@@ -51,7 +51,7 @@ class ColoredFormatter(logging.Formatter):
 def setup_logger(
     name: str = "youtu-graphrag",
     level: int = logging.INFO,
-    log_file: Optional[str] = None,
+    log_file: Optional[str] =  "output/logs/llm.log",
     use_colors: bool = True,
 ) -> logging.Logger:
     """Build (or rebuild) a named logger.
@@ -76,18 +76,18 @@ def setup_logger(
         )
         logger.addHandler(console_handler)
 
-    if log_file:
-        try:
-            log_dir = os.path.dirname(log_file)
-            if log_dir:
-                os.makedirs(log_dir, exist_ok=True)
-            file_handler = logging.FileHandler(log_file, encoding="utf-8")
-            file_handler.setLevel(level)
-            file_handler.setFormatter(logging.Formatter(fmt=_FMT, datefmt=_DATEFMT))
-            logger.addHandler(file_handler)
-        except OSError as e:
-            # Never let a broken log file crash the pipeline.
-            logger.warning(f"Could not open log file {log_file!r}: {e}")
+
+    try:
+        log_dir = os.path.dirname(log_file)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
+        file_handler.setLevel(level)
+        file_handler.setFormatter(logging.Formatter(fmt=_FMT, datefmt=_DATEFMT))
+        logger.addHandler(file_handler)
+    except OSError as e:
+        # Never let a broken log file crash the pipeline.
+        logger.warning(f"Could not open log file {log_file!r}: {e}")
 
     return logger
 

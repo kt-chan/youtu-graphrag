@@ -568,101 +568,14 @@ prompts:
       Answer (be specific and direct):
 
       '
-    ircot: 'You are an expert knowledge assistant using iterative retrieval with chain-of-thought
-      reasoning.
+    
+    debt_collection: | 
+      你是信用卡催收知识助手，使用迭代检索和思维链推理。你的任务：根据当前催收对话和知识上下文，判断信息是否足够生成催收员下一句应答；若足够，输出最终话术；若不足，输出下一轮检索查询。
 
+      重要提示：你必须严格只输出有效的 JSON 格式数据，不得包含任何其他内容，不要使用 ```json 等 Markdown 标记，直接输出 JSON 对象本身。
 
-      Current Question: {current_query}
-
-
-      Available Knowledge Context:
-
+      参考资料：Triples 是相关的知识图谱结构，Chunks 是相关的引用对话片段。
       {context}
-
-
-      Previous Thoughts: {previous_thoughts}
-
-
-      Step {step}: Please think step by step about what additional information you
-      need to answer the question completely and accurately.
-
-
-      Instructions:
-
-      1. Analyze the current knowledge context and the question
-
-      2. Think about what information might be missing or unclear
-
-      3. If you have enough information to answer, in the end of your response, write
-      "FINAL_ANSWER:" followed by your final answer
-
-      4. If you need more information, in the end of your response, write a specific
-      query begin with "NEW_QUERIES:" to retrieve additional relevant information
-
-      5. Be specific and focused in your reasoning, and you can only return either 3 or 4 in your response.
-
-
-      Your reasoning:
-
-      '
-    novel: '你是小说知识助手，你的任务是根据提供的小说知识库回答问题。
-
-      1. 如果知识库中的信息不足以回答问题，请根据你的推理和知识回答。
-
-      2. 回答要简洁明了。
-
-      3. 对于事实性问题，提供具体的事实或人物名称。
-
-      4. 对于时间性问题，提供具体的时间、年份或时间段。
-
-      问题：{question}
-
-      相关知识：{context}
-
-      答案（简洁明了）：
-
-      '
-    novel_eng: "You are a novel knowledge assistant. Your task is to answer the question\
-      \ based on the provided novel knowledge context.\n1. If the knowledge is insufficient,\
-      \ answer the question based on your own knowledge.\n2. Be precise and concise\
-      \ in your answer.\n3. For factual questions, provide the specific fact or entity\
-      \ name\n4. For temporal questions, provide the specific date, year, or time\
-      \ period\n\nQuestion: {question}\n\nKnowledge Context:\n{context}   \n\nAnswer\
-      \ (be specific and direct):\n"
-    debt_collection: '你是信用卡催收知识助手，你的任务是根据提供的债务催收知识图谱回答问题。
-
-      1. 仅使用提供的知识上下文回答问题。
-
-      2. 如果知识不足，请拒绝回答。
-
-      3. 回答要精确简洁。
-
-      4. 对于事实性问题，提供具体的事实或实体名称。
-
-      5. 对于时间性问题，提供具体的日期、年份或时间段。
-
-      问题：{question}
-
-      知识上下文：
-
-      {context}
-
-      答案（具体直接）：
-
-      '
-    debt_collection_ircot: '你是信用卡催收知识助手，使用迭代检索和思维链推理。
-      你的任务：根据当前催收对话和知识上下文，判断信息是否足够生成催收员下一句应答；若足够，输出最终话术；若不足，输出下一轮检索查询。
-
-      用户原始问题：{initial_query}
-
-      当前思考问题：{current_query}
-
-      可用知识上下文：
-      {context}
-
-      之前的思考：{previous_thoughts}
-
-      当前迭代步骤：{step}
 
       请按以下规则逐步处理：
 
@@ -678,45 +591,30 @@ prompts:
       - 所有金额、方案、时间必须与知识上下文一致。
 
       3. 决策规则
-      - 若信息足够生成下一句催收员话术，则在最后以新段落 `FINAL_ANSWER:` 开头，只输出催收员话术。
-      - 若信息不足，则在最后以新段落 `NEW_QUERIES:` 开头，只输出 1-3 条具体检索查询。
-      - 不要同时输出 `FINAL_ANSWER:` 和 `NEW_QUERIES:`。
-      - 若当前步骤 {step} 已达到最大迭代轮次，例如 5 轮，必须输出 `FINAL_ANSWER:`。
+      - 若信息足够生成下一句催收员话术，则 JSON 的 decision_type 字段应为 "FINAL_ANSWER"，并在 final_answer 字段中填充话术。
+      - 若信息不足，则 decision_type 字段应为 "NEW_QUERIES"，并在 new_queries 字段中填充 1-3 条具体检索查询。
+      - 不能同时生成话术和查询。
 
-      4. 最终话术要求
+      4. 最终话术要求（当输出 FINAL_ANSWER 时）
       - 包含：共情、征信风险提示、具体可选方案、明确金额或时间、官方还款渠道、后续影响。
       - 针对失业且担心征信的客户，应避免强硬施压，可建议先还部分、申请减免、账单调整，并询问可处理时间。
       - 话术自然、合规、以客户为中心，避免威胁、辱骂、虚假承诺。
 
       5. 输出格式
-      - 推理简洁、精确、集中。
-      - 若输出最终答案，格式为：
+      - 推理必须简洁、精确、集中在 reasoning 字段中。
+      - 必须输出如下结构的 JSON 对象：
 
-      若需要继续检索，格式为：
+      {{
+        "reasoning": "步骤1和步骤2的思维链推理，分析对话状态与知识匹配的过程。",
+        "decision_type": "FINAL_ANSWER 或 NEW_QUERIES",
+        "final_answer": "催收员：……（如果 decision_type 是 NEW_QUERIES，此字段设为空字符串或 null）",
+        "new_queries": ["查询1","查询2"] // 如果 decision_type 是 FINAL_ANSWER，此字段设为空数组
+      }}
 
-      FINAL_ANSWER:
-      催收员：……
+      用户原始问题：{initial_query}
 
-      若需要继续检索，格式为：
+      当前思考问题：{current_query}
 
-      NEW_QUERIES:
-      催收员：请提供一下资料：
-      - 查询1
-      - 查询2
-
-      你的最终输出：
-
-      '
-
-    debt_collection_novel: '你是信用卡催收知识助手，你的任务是根据提供的债务催收知识图谱回答问题。
-
-      1. 如果知识库中的信息不足以回答问题，请根据你的推理和知识回答。
-
-      2. 回答要简洁明了。
-
-      你的推理：
-
-      '
 retrieval:
   agent:
     enable_ircot: false
@@ -733,8 +631,8 @@ retrieval:
     search_k: 50
   recall_paths: 2
   similarity_threshold: 0.3
-  top_k: 20
-  top_k_filter: 20
+  top_k: 10
+  top_k_filter: 5
 triggers:
   constructor_trigger: true
   mode: agent  # set noagent to speed up
