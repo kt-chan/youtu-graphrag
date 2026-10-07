@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 import yaml
 
-from utils.logger import logger
+from app.utils.logger import logger
 
 @dataclass
 class SystemConfig:

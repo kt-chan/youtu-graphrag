@@ -20,7 +20,7 @@ datasets:
   debt_collection:
     corpus_path: data/debt_collection/debt_collection_corpus.json
     qa_path: data/debt_collection/debt_collection_qa.json
-    schema_path: schemas/debt_collection.json
+    schema_path: schemas/debt_collection/schema.json
     graph_output: output/graphs/debt_collection_new.json
 
 embeddings:
@@ -149,48 +149,8 @@ prompts:
       : {{\n    \"PERSON#1\": \"person\",\n    \"LOCATION#1\": \"location\"\n  }},\n\
       \  \"new_schema_types\": {{\n      \"nodes\": [\"Instrument\"],\n      \"relations\"\
       : [\"owns\"],\n      \"attributes\": [\"skill_level\"]\n  }}\n}}\n"
-    debt_collection:   |
-      你是信用卡外呼催收对话信息提取专家。请根据催收通话内容，参考以下债务催收本体 schema，提取对话阶段、债务人画像、异议类别、说服策略、话术模板、合规规则等关键信息，并严格按照示例返回 JSON 格式。
-
-      催收对话内容:
-      `{chunk}`
-
-      参考 schema:
-      `{schema}`
-
-      要求：
-
-      1. 识别对话阶段（如 Opening_Verification、Debt_Acknowledgment、Hardship_Exploration、Negotiation、Commitment_PTP、Closing）。
-      2. 识别债务人画像（如 Agreeable、Driver、Thinker、Defensive、Apathetic、Worried、Emotional、Intellectual、Circumstantial）。
-      3. 识别异议类别（如 Financial_Hardship、Dispute_Fee_Concern、Third_Party_Approval、Call_Frequency_Complaint、Outright_Refusal）。
-      4. 识别说服策略（如 Reciprocity、Commitment_Consistency、Social_Proof、Authority、Liking、Scarcity、Strategic_Silence、Concession_Management）。
-      5. 提取话术模板与合规规则（如 FDCPA Mini-Miranda、录音告知、不威胁等）。
-      6. **【核心限制：仅限 Schema 抽象概念】在提取实体类型和关系时，绝对禁止提取具体的客户身份信息（如客户姓名、电话、身份证号、具体账户）和具体的支付细节（如具体金额数值、具体还款日期）。必须强制将信息抽象为 Schema 概念级别。**
-      7. 实体名称应直接使用 Schema 中定义的规范类别名称或抽象概念标签（例如使用 `Objection_Financial_Hardship` 代替“我被裁员了”；使用 `Commitment_PTP` 代替“明天转500”），禁止将对话中包含具体隐私或金额的原话提取为实体。
-      8. 根据提供的 schema 为每个实体分配正确的类型。
-
-      注意：严格抽取 triple 三元组为 [实体, 关系, 实体]，不要多余元素。
-
-      示例输出，包括属性、三元组、实体类型及新模式类型：
-      {{
-      "attributes": {{
-      "Call_2317941550352385028": ["call_date: 20260506", "talk_time: 613", "overdue_bucket: M1"]
-      }},
-      "triples": [
-      ["Call_2317941550352385028", "has_next_stage", "Stage_Opening_Verification"],
-      ["Stage_Hardship_Exploration", "triggered_in_stage", "Objection_Financial_Hardship"],
-      ["Persona_Worried", "susceptible_to", "Strategy_Reciprocity"]
-      ],
-      "entity_types": {{
-      "Call_2317941550352385028": "collection_call",
-      "Stage_Opening_Verification": "dialogue_stage",
-      "Objection_Financial_Hardship": "objection_category",
-      "Persona_Worried": "debtor_persona",
-      "Strategy_Reciprocity": "persuasion_strategy"
-      }}
-      }}
-
-    debt_collection_agent: |
+    
+    debt_collection: |
       你是中国银行业信用卡外呼催收对话信息提取专家，专注于 M1 阶段（逾期 1-30 天）失业及其他困难类债务人的 SOP 本体挖掘。
       请根据文末的催收通话内容，严格按照下方提供的 Pydantic JSON Schema 输出结构化 JSON。
 
@@ -234,7 +194,7 @@ prompts:
          - satisfied_in_stage 可引用 master_stages 或 sub_steps 中已存在的节点。
 
       2. 主流程线性无环：master_stages 按 S1→S9 顺序、无重复。
-         仅通话到达的最后一个阶段 next_master_stage 为 null。
+         通话到达的最后一个阶段为 S9_CallClose 完成通话， next_master_stage 为 null。
 
       3. 禁止空节点：未进入分支时 branches_to_category 为 null，
          subflow_categories 与 sub_steps 为 []。不要输出空 extracted_info。
@@ -345,7 +305,7 @@ prompts:
       }}
 
       ============================================================
-      【示例 2：路径 B —— 施压后挂断，未进入 S5】
+      【示例 2：路径 B —— 施压后挂断，未进入 S5, 以 S9 收尾】
       ============================================================
 
       {{
@@ -370,6 +330,10 @@ prompts:
           }},
           {{
             "stage_id": "S8_ProfessionalInterruption",
+            "next_master_stage": "S9_CallClose"
+          }},
+          {{
+            "stage_id": "S9_CallClose",
             "next_master_stage": null
           }}
         ],
@@ -402,7 +366,7 @@ prompts:
       }}
 
       ============================================================
-      【示例 3：路径 B 变体 —— 客户不便，以 S8 收尾，无子流程】
+      【示例 3：路径 B 变体 —— 客户不便，经过 S8 并以 S9 收尾，无子流程】
       ============================================================
 
       {{
@@ -422,6 +386,10 @@ prompts:
           }},
           {{
             "stage_id": "S8_ProfessionalInterruption",
+            "next_master_stage": "S9_CallClose"
+          }},
+          {{
+            "stage_id": "S9_CallClose",
             "next_master_stage": null
           }}
         ],

@@ -3,7 +3,7 @@ import glob
 import os
 import shutil
 
-from utils.logger import logger
+from app.utils.logger import logger
 
 
 async def clear_cache_files(dataset_name: str) -> None:

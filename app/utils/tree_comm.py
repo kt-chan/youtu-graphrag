@@ -13,8 +13,8 @@ from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 
-from utils import call_llm_api
-from utils.logger import logger
+from app.utils import call_llm_api
+from app.utils.logger import logger
 
 warnings.filterwarnings("ignore")
 

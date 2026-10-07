@@ -3,9 +3,9 @@ from typing import Type
 
 import json_repair
 from pydantic import BaseModel
-from schemas.debt_collection import DataExtraction
-from utils import call_llm_api
-from utils.schema_utils import serialize_pydantic_schema
+from app.backend.model.debt_collection import DataExtraction
+from app.utils import call_llm_api
+from app.utils.schema_utils import serialize_pydantic_schema
 
 try:
     from config import get_config

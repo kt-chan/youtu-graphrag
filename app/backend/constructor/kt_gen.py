@@ -44,21 +44,22 @@ import networkx as nx
 import tiktoken
 from pydantic import BaseModel, ValidationError
 
+from app.utils import call_llm_api, graph_processor
 from config import ConfigManager, get_config
-from schemas.debt_collection import DataExtraction, GraphNodeEnum
-from utils import call_llm_api, graph_processor, tree_comm
-from utils.checkpoint import (
+from app.backend.model.debt_collection import DataExtraction, GraphNodeEnum
+from app.utils import tree_comm
+from app.utils.checkpoint import (
     checkpoint_exists as _ckpt_exists,
     checkpoint_path as _ckpt_path,
     load_checkpoint as _ckpt_load,
     save_checkpoint as _ckpt_save,
 )
-from utils.chunking import TextChunker, stable_chunk_id
-from utils.llm_cache import LLMResponseCache
-from utils.schema_utils import serialize_pydantic_schema
+from app.utils.chunking import TextChunker, stable_chunk_id
+from app.utils.llm_cache import LLMResponseCache
+from app.utils.schema_utils import serialize_pydantic_schema
 
 # ── CHANGED ── import the LLM-exchange logger helper alongside `logger`.
-from utils.logger import logger, log_llm_exchange
+from app.utils.logger import logger, log_llm_exchange
 
 
 # =============================================================================
@@ -72,17 +73,13 @@ def _build_construction_prompt(
 ) -> str:
     construction_prompts = config.prompts["construction"]
 
-    base_prompt_type = (
+    prompt_type = (
         dataset_name if dataset_name in construction_prompts else "general"
     )
-    candidate = f"{base_prompt_type}_agent"
-    prompt_type = (
-        candidate if candidate in construction_prompts else "debt_collection_agent"
-    )
+    
     if prompt_type not in construction_prompts:
         raise KeyError(
             f"No pydantic construction prompt registered; expected "
-            f"'{candidate}' or fallback 'debt_collection_agent_pydantic'."
         )
 
     schema_str = serialize_pydantic_schema(pydantic_model)

@@ -1,4 +1,4 @@
-from utils import call_llm_api
+from app.utils import call_llm_api
 
 class Eval:
     def __init__(self):

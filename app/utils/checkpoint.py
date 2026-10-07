@@ -11,7 +11,7 @@ import pickle
 import time
 from typing import Any, Dict, Optional
 
-from utils.logger import logger
+from app.utils.logger import logger
 
 
 def checkpoint_path(dataset_name: str) -> str:

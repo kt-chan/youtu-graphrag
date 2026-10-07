@@ -14,10 +14,10 @@ import torch.nn.functional as F
 import concurrent.futures
 from sentence_transformers import SentenceTransformer
 
-from models.retriever.faiss_filter import DualFAISSRetriever
-from utils import graph_processor
-from utils import call_llm_api
-from utils.logger import logger
+from backend.retriever.faiss_filter import DualFAISSRetriever
+from app.utils import graph_processor
+from app.utils import call_llm_api
+from app.utils.logger import logger
 
 try:
     from config import get_config

@@ -8,7 +8,7 @@ import tempfile
 from typing import Optional, Dict
 from pathlib import Path
 
-from utils.logger import logger
+from app.utils.logger import logger
 
 try:
     from magic_pdf.data.dataset import PymuDocDataset

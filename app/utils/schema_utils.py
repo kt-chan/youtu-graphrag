@@ -4,9 +4,7 @@ import os
 from typing import Type
 
 from pydantic import BaseModel
-
-
-from schemas.debt_collection import GraphNodeEnum
+from app.backend.model.debt_collection import GraphNodeEnum
 
 
 def ensure_demo_schema_exists() -> str:
@@ -63,7 +61,7 @@ def ensure_demo_schema_exists() -> str:
 def get_schema_path_for_dataset(dataset_name: str) -> str:
     """Return dataset-specific schema if present; otherwise fallback to demo."""
     if dataset_name and dataset_name != "demo":
-        ds_schema = f"schemas/{dataset_name}.json"
+        ds_schema = f"schemas/{dataset_name}/schema.json"
         if os.path.exists(ds_schema):
             return ds_schema
     return ensure_demo_schema_exists()

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from pathlib import Path
 import re
 import sys
 from typing import Dict, List, Optional
@@ -19,30 +20,30 @@ import uvicorn
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils.logger import logger
-from utils.encoding import decode_bytes_with_detection
-from utils.schema_utils import ensure_demo_schema_exists, get_schema_path_for_dataset
-from utils.cache_utils import clear_cache_files
-from utils.ws_manager import ConnectionManager
-from utils import visualization as viz
-from utils import dataset_manager as ds
+from app.backend.retriever import kt_retriever as retriever
+from app.utils.logger import logger
+from app.utils.encoding import decode_bytes_with_detection
+from app.utils.schema_utils import ensure_demo_schema_exists, get_schema_path_for_dataset
+from app.utils.cache_utils import clear_cache_files
+from app.utils.ws_manager import ConnectionManager
+from app.utils import visualization as viz
+from app.utils import dataset_manager as ds
 
 
 # ---------------------------------------------------------------------------
 # Optional dependencies
 # ---------------------------------------------------------------------------
 try:
-    from utils.document_parser import get_parser
+    from app.utils.document_parser import get_parser
     DOCUMENT_PARSER_AVAILABLE = True
 except ImportError as e:
     DOCUMENT_PARSER_AVAILABLE = False
     logger.warning(f"Document parser not available: {e}")
 
 try:
-    from models.constructor import kt_gen as constructor
-    from models.retriever import (
+    from backend.constructor import kt_gen as constructor
+    from backend.retriever import (
         agentic_decomposer as decomposer,
-        enhanced_kt_retriever as retriever,
     )
     from config import get_config, ConfigManager
     GRAPHRAG_AVAILABLE = True
@@ -57,10 +58,17 @@ except ImportError as e:
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Youtu-GraphRAG Unified Interface", version="1.0.0")
 
-if os.path.isdir("assets"):
-    app.mount("/assets", StaticFiles(directory="assets"), name="assets")
-if os.path.isdir("frontend"):
-    app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+# Directories based on location of main.py
+BASE_DIR = Path(__file__).resolve().parent          # .../app
+
+FRONTEND_DIR = BASE_DIR / "frontend"
+ASSETS_DIR = FRONTEND_DIR / "assets"                # Use BASE_DIR / "assets" if assets was also moved into app/
+
+if FRONTEND_DIR.is_dir():
+    app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
+if ASSETS_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 
 app.add_middleware(
     CORSMiddleware,
@@ -793,7 +801,8 @@ async def upload_schema(
         raise HTTPException(status_code=400, detail="Schema JSON must be an object")
 
     os.makedirs("schemas", exist_ok=True)
-    with open(f"schemas/{dataset_name}.json", "w", encoding="utf-8") as f:
+    os.makedirs(f"schemas/{dataset_name}", exist_ok=True)
+    with open(f"schemas/{dataset_name}/schema.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     return {

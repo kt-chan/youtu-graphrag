@@ -2,7 +2,7 @@
 import networkx as nx
 import json
 
-from utils.logger import logger
+from app.utils.logger import logger
 
 
 def _coerce_chunk_ids(raw) -> list:

@@ -7,7 +7,7 @@ import os
 import threading
 from typing import Dict, Optional
 
-from utils.logger import logger
+from app.utils.logger import logger
 
 
 class LLMResponseCache:

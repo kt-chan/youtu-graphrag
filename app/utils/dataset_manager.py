@@ -6,6 +6,7 @@ coupling beyond HTTPException for consistent error surfaces.
 from __future__ import annotations
 
 import os
+import glob
 import shutil
 from datetime import datetime
 from typing import Dict, List
@@ -49,7 +50,7 @@ def list_datasets() -> Dict:
                 "name": item,
                 "type": "uploaded",
                 "status": "ready" if os.path.exists(graph_path) else "needs_construction",
-                "has_custom_schema": os.path.exists(f"schemas/{item}.json"),
+                "has_custom_schema": os.path.exists(f"schemas/{item}/schema.json"),
             })
 
     if os.path.exists("data/demo/demo_corpus.json"):
@@ -71,18 +72,25 @@ def delete_dataset_files(dataset_name: str) -> Dict:
         raise HTTPException(status_code=400, detail="Cannot delete demo dataset")
 
     deleted_files: List[str] = []
-    candidates = [
+    
+    # Use glob patterns to catch directories and all file variations (e.g., .json, _new.json, .txt)
+    patterns = [
         f"data/uploaded/{dataset_name}",
-        f"output/graphs/{dataset_name}_new.json",
-        f"schemas/{dataset_name}.json",
+        f"output/graphs/{dataset_name}*",
+        f"schemas/{dataset_name}*",
         f"retriever/faiss_cache_new/{dataset_name}",
-        f"output/chunks/{dataset_name}.txt",
+        f"output/chunks/{dataset_name}*",
     ]
-    for path in candidates:
-        if not os.path.exists(path):
-            continue
-        shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
-        deleted_files.append(path)
+
+    for pattern in patterns:
+        for path in glob.glob(pattern):
+            if path in deleted_files:
+                continue
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            elif os.path.isfile(path):
+                os.remove(path)
+            deleted_files.append(path)
 
     return {
         "success": True,

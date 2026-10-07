@@ -113,7 +113,7 @@ class MasterStageEnum(GraphNodeEnum):
             ),
             "S8_ProfessionalInterruption": (
                 "Professional Call Interruption：客户不便通话时，"
-                "礼貌中断并约定回拨时间，保留后续沟通空间。协商未成时的收尾路径。"
+                "礼貌中断并约定回拨时间，保留后续沟通空间。协商未成时的收尾路径。完成后默认进入 S9。"
             ),
             "S9_CallClose": (
                 "Call Close & Documentation：复述确认达成的协议，"

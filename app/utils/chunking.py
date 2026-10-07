@@ -89,7 +89,7 @@ class TextChunker:
         if self.dataset_name in self.datasets_no_chunk:
             if isinstance(text, dict):
                 chunk = (
-                    f"Labels='{text.get('title', '')}' "
+                    f"Labels='{text.get('label', '')}' "
                     f"Content='{text.get('text', '')}'"
                 ).strip()
             else:
@@ -98,7 +98,7 @@ class TextChunker:
         else:
             if isinstance(text, dict):
                 raw = (
-                    f"Labels='{text.get('title', '')}' {text.get('text', '')}"
+                    f"Labels='{text.get('label', '')}' {text.get('text', '')}"
                 ).strip()
             else:
                 raw = str(text)
