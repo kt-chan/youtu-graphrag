@@ -1,0 +1,181 @@
+# prompt.yaml
+# The compile-ontology prompt sent to the LLM.
+# Only {{SCHEMA_JSON}} is templated at runtime.
+
+system: |
+  You are a deterministic code generator.
+  Return only the requested python code block.
+
+user: |
+  # ROLE
+  You are a senior Python engineer specialising in Pydantic v2 and knowledge-graph
+  ontology modelling. You compile a declarative `schema.json` into a single
+  runnable Python module that follows a fixed house style.
+
+  # HARD DEPENDENCY (already exists — DO NOT redefine it)
+  Your module MUST import from a sibling module:
+
+      from .graph_base import Edge, ListEdge, GraphNodeEnum, NodeModel
+
+  `graph_base.py` provides:
+    - `Edge(label, default=None, required=False, **kwargs)` — single-valued edge.
+    - `ListEdge(label, default_factory=list, **kwargs)` — multi-valued edge.
+    - `GraphNodeEnum` — base for node enums. `node_prefix()` strips the
+      trailing "Enum"; `member_descriptions()` returns `{value: 中文说明}`;
+      `description_for(value)` looks up a description.
+    - `NodeModel` — base for node models. Subclasses set
+      `model_config = ConfigDict(graph_id_fields=["<pk>"])` and inherit
+      `node_id()`, `to_node()`, `to_edges()`.
+
+  Do NOT redefine these symbols. Do NOT import from anywhere else for
+  graph concerns.
+
+  # INPUT
+  The ONLY runtime input is the `schema.json` in §INPUT. It declares:
+    - `Nodes`      : node type names (PascalCase).
+    - `Relations`  : edge names (camelCase).
+    - `Attributes` : field names (snake_case).
+
+  # OUTPUT CONTRACT
+  Emit exactly ONE ```python code block, nothing else — no prose before or after.
+  The module layout is fixed:
+
+    1. Module docstring (Chinese): domain summary + 设计要点 bullets.
+    2. `from __future__ import annotations`
+    3. stdlib / typing imports
+    4. `from pydantic import BaseModel, ConfigDict, Field`
+    5. `from .graph_base import Edge, ListEdge, GraphNodeEnum, NodeModel`
+    6. `# === Enums ===`
+           one `XxxEnum(GraphNodeEnum)` per Node, in schema order.
+    7. `# === Canonical Graph Node Models ===`
+           one `Xxx(NodeModel)` per Node, in the same order.
+    8. `# === Root Extraction Model ===`
+           `class DataExtraction(BaseModel)` aggregating one list per Node.
+
+  # NODE -> (ENUM + MODEL) RULES
+  For every `N` in `Nodes`:
+
+    a) `class {N}Enum(GraphNodeEnum)`
+         - Members inferred from the node's semantics inside this schema.
+         - Member NAME  = UPPER_SNAKE, e.g. `S1_RPC_VERIFICATION`.
+         - Member VALUE = `"{N}_{PascalCase}"`, e.g. `"MasterStage_S1_RPCVerification"`.
+         - If the schema does not list explicit member values, infer 2-10
+           plausible members from the node name and the relations touching it.
+         - MUST implement:
+               @classmethod
+               def member_descriptions(cls) -> dict[str, str]:
+                   return { "<value>": "<中文说明，≥20 字，含职责与约束>", ... }
+         - Every member VALUE must appear as a key in `member_descriptions()`.
+
+    b) `class {N}(NodeModel)`
+         - First line after the docstring:
+               model_config = ConfigDict(graph_id_fields=["<pk_field>"])
+         - `<pk_field>` = the Attribute of the form `{snake(N)}_id` when present;
+           otherwise the `*_id` Attribute whose stem best matches `N`.
+         - Field order:
+               PK -> out-edges -> in-edges -> non-PK attributes.
+         - PK field: `<pk_field>: {N}Enum = Field(..., description="...")`.
+
+  # RELATION -> EDGE FIELD RULES
+  For every `R` in `Relations`:
+    - `field_name = snake_case(R)`.
+    - `label      = R` verbatim (camelCase, never rewritten or abbreviated).
+    - Source = the node model that semantically owns the relation.
+    - Target = the node whose name appears inside `R` (after stripping prefixes).
+    - Cardinality chosen by prefix:
+
+        | Prefix                                  | Card. | Field kind                                                     |
+        |-----------------------------------------|-------|----------------------------------------------------------------|
+        | next / parent / initial / branchesTo /  | 0..1  | `Optional[TEnum] = Edge(label=R, default=None, description=...)`|
+        | rejoins / satisfiedIn / triggeredIn     |       |                                                                |
+        | requires / yields                       | 0..N  | `list[TEnum] = ListEdge(label=R, description=...)`             |
+
+    - The relations whose prefix is `parent` (e.g. `parentMasterStage`,
+      `parentCategory`) are REQUIRED on the child node:
+          `parent_x: TEnum = Edge(label=R, required=True, description=...)`
+    - Never use raw `Field(...)` for an edge — always `Edge`/`ListEdge`.
+    - If `R` cannot be resolved to a Node in `Nodes`, fall back to
+      `list[str]` (or `Optional[str]` for 0..1) and say so in the description.
+
+  # ATTRIBUTE -> FIELD RULES
+  For every `A` in `Attributes`:
+    - `A` ending in `_id`
+          -> primary key of the node whose name matches the stem (see §NODE RULES b).
+    - `A == "name"`
+          -> `name: str = Field(..., description=...)` on the owning node;
+            if shared across nodes, prefix it (`stage_name`, `step_name`, ...).
+    - `A == "class"`
+          -> `class_: str = Field(..., alias="class", description=...)`; the
+            model must set `populate_by_name=True` in `model_config`.
+    - `A == "extracted_info"`
+          -> `list[str] = Field(default_factory=list, description=...)` on the
+            node that produces free-form facts (typically a sub-step node).
+    - Anything else: infer the owning node from the stem; type as `str` unless
+      a list is clearly implied.
+
+  # ROOT MODEL
+  `class DataExtraction(BaseModel)` — one list field per Node, named as
+  `snake_case(Node)` pluralised (e.g. `MasterStage` -> `master_stages`), with
+  `default_factory=list`. Its docstring MUST state, in Chinese:
+    - 生成顺序建议 (list the nodes in the natural narrative order)
+    - 连通性硬约束 (no dangling IDs, cardinality limits, etc.)
+
+  # LANGUAGE RULES
+    - Every `description=` and every `member_descriptions()` value is Chinese.
+    - Every docstring is Chinese.
+    - Code identifiers, `label=` values, and enum *values* stay English /
+      verbatim from the schema.
+
+  # STYLE SPECIMEN (shape only — do not reuse content)
+  Given a toy schema:
+      Nodes       = ["Ticket", "Agent"]
+      Relations   = ["assignedTo", "escalatesTo"]
+      Attributes  = ["name", "ticket_id", "agent_id", "notes"]
+
+  The expected output shape is:
+
+      class TicketEnum(GraphNodeEnum):
+          """工单状态节点。"""
+
+          NEW = "Ticket_New"
+          ESCALATED = "Ticket_Escalated"
+
+          @classmethod
+          def member_descriptions(cls) -> dict[str, str]:
+              return {
+                  "Ticket_New": "新建工单：尚未分配处理人，等待坐席认领。",
+                  "Ticket_Escalated": "已升级工单：已超出 SLA，需主管介入处理。",
+              }
+
+      class Ticket(NodeModel):
+          """工单节点。工单按时间线性推进。"""
+
+          model_config = ConfigDict(graph_id_fields=["ticket_id"])
+
+          ticket_id: TicketEnum = Field(..., description="工单主键。")
+          assigned_to: Optional[AgentEnum] = Edge(
+              label="assignedTo", default=None,
+              description="工单当前分配到的坐席。",
+          )
+          escalates_to: Optional[AgentEnum] = Edge(
+              label="escalatesTo", default=None,
+              description="工单升级后指向的坐席。",
+          )
+          ticket_name: str = Field(..., description="工单名称。")
+          notes: list[str] = Field(default_factory=list, description="备注。")
+
+  # SELF-CHECK BEFORE EMITTING
+    - [ ] every Node produced exactly one `*Enum` and one `*` model
+    - [ ] every Relation appears on exactly one model; `label` spelled verbatim
+    - [ ] every Attribute is placed on some model; no orphan attribute
+    - [ ] every model's first field is its PK; `graph_id_fields` matches
+    - [ ] every `description=` and every `member_descriptions()` value is Chinese
+    - [ ] `DataExtraction` lists every Node exactly once
+    - [ ] output is a single ```python block, no prose outside it
+
+  # INPUT — schema.json
+  <schema.json>
+  {{SCHEMA_JSON}}
+  </schema.json>
+
+  # GO

@@ -56,7 +56,7 @@ except ImportError as e:
 # ---------------------------------------------------------------------------
 # App + middleware + static mounts
 # ---------------------------------------------------------------------------
-app = FastAPI(title="Youtu-GraphRAG Unified Interface", version="1.0.0")
+app = FastAPI(title="Auto-GraphRAG Unified Interface", version="1.0.0")
 
 # Directories based on location of main.py
 BASE_DIR = Path(__file__).resolve().parent          # .../app
@@ -623,13 +623,13 @@ async def read_root():
     frontend_path = "frontend/index.html"
     if os.path.exists(frontend_path):
         return FileResponse(frontend_path)
-    return {"message": "Youtu-GraphRAG Unified Interface is running!", "status": "ok"}
+    return {"message": "Auto-GraphRAG Unified Interface is running!", "status": "ok"}
 
 
 @app.get("/api/status")
 async def get_status():
     return {
-        "message": "Youtu-GraphRAG Unified Interface is running!",
+        "message": "Auto-GraphRAG Unified Interface is running!",
         "status": "ok",
         "graphrag_available": GRAPHRAG_AVAILABLE,
     }
@@ -830,7 +830,7 @@ async def delete_dataset(dataset_name: str):
 async def startup_event():
     for d in ("data/uploaded", "output/graphs", "output/logs", "schemas"):
         os.makedirs(d, exist_ok=True)
-    logger.info("🚀 Youtu-GraphRAG Unified Interface initialized")
+    logger.info("🚀 Auto-GraphRAG Unified Interface initialized")
 
 
 if __name__ == "__main__":

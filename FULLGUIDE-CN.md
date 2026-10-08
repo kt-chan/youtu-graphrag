@@ -1,4 +1,4 @@
-# 🚀 Youtu-GraphRAG 完整指南
+# 🚀 Auto-GraphRAG 完整指南
 
 <div align="center">
   <img src="assets/logo.png" alt="Logo" width="100">
@@ -24,11 +24,11 @@
 本方式依赖 Docker 环境，可以根据 [官方文档](https://docs.docker.com/get-started/) 进行安装。
 
 ```bash
-# 1. 克隆 Youtu-GraphRAG 项目
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. 克隆 Auto-GraphRAG 项目
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. 根据 .env.example 创建 .env 文件
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # 在 .env 中配置兼容 OpenAI API 格式的 LLM API
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -77,11 +77,11 @@ curl -v http://localhost:8000
 
 ### 使用 Docker 准备环境
 ```bash
-# 1. 克隆 Youtu-GraphRAG 项目
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. 克隆 Auto-GraphRAG 项目
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. 根据 .env.example 创建 .env 文件
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # 在 .env 中配置兼容 OpenAI API 格式的 LLM API
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -96,11 +96,11 @@ docker run -d -p 8000:8000 youtu_graphrag:v1
 
 ### 使用 Conda 准备环境
 ```bash
-# 1. 克隆 Youtu-GraphRAG 项目
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. 克隆 Auto-GraphRAG 项目
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. 根据 .env.example 创建 .env 文件
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # 在 .env 中配置兼容 OpenAI API 格式的 LLM API
 LLM_MODEL=deepseek-chat
 LLM_BASE_URL=https://api.deepseek.com
@@ -260,7 +260,7 @@ python kt_rag.py --override '{
 [2025-10-20 17:28:55] INFO enhanced_kt_retriever:2353 - Successfully loaded chunk embeddings from disk cache
 [2025-10-20 17:28:55] INFO faiss_filter:856 - Building FAISS indices and embeddings...
 ./start.sh: line 27: 38579 Segmentation fault: 11  python backend.py
-👋 Youtu-GraphRAG server stopped.
+👋 Auto-GraphRAG server stopped.
 /opt/homebrew/Cellar/python@3.10/3.10.17/Frameworks/Python.framework/Versions/3.10/lib/python3.10/multiprocessing/resource_tracker.py:224: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
 ```
 
@@ -329,7 +329,7 @@ python backend.py
 
 设置后重新构建知识图谱，应该能够正常完成 FAISS 索引构建而不会崩溃。
 
-**相关 Issue：** [#123](https://github.com/TencentCloudADP/youtu-graphrag/issues/123)
+**相关 Issue：** [#123](https://github.com/TencentCloudADP/Auto-GraphRAG/issues/123)
 
 ---
 

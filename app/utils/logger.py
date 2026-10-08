@@ -49,7 +49,7 @@ class ColoredFormatter(logging.Formatter):
 
 
 def setup_logger(
-    name: str = "youtu-graphrag",
+    name: str = "Auto-GraphRAG",
     level: int = logging.INFO,
     log_file: Optional[str] =  "output/logs/llm.log",
     use_colors: bool = True,
@@ -93,11 +93,11 @@ def setup_logger(
 
 
 # ── Main application logger ────────────────────────────────────────────────
-logger = setup_logger("youtu-graphrag", level=logging.INFO, use_colors=True)
+logger = setup_logger("Auto-GraphRAG", level=logging.INFO, use_colors=True)
 
 # ── Dedicated LLM exchange logger (file only, no console noise) ────────────
 llm_logger = setup_logger(
-    "youtu-graphrag.llm",
+    "Auto-GraphRAG.llm",
     level=logging.DEBUG,
     log_file=_LLM_LOG_DEFAULT,
     use_colors=False,

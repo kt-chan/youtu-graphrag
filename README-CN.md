@@ -1,13 +1,13 @@
 <div align="center">
 
-#  <img src="assets/logo.svg" alt="Youtu-agent Logo" height="26px"> Youtu-GraphRAG：垂直统一的图增强复杂推理新范式
+#  <img src="assets/logo.svg" alt="Youtu-agent Logo" height="26px"> Auto-GraphRAG：垂直统一的图增强复杂推理新范式
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/Paper-Latest-blue.svg)](Youtu-GraphRAG.pdf)
+[![Documentation](https://img.shields.io/badge/Paper-Latest-blue.svg)](Auto-GraphRAG.pdf)
 [![WeChat Community](https://img.shields.io/badge/Community-WeChat-32CD32)](assets/wechat_qr.png)
 [![Discord](https://img.shields.io/badge/Community-Discord-8A2BE2)](https://discord.gg/QjqhkHQVVM)
-<a href=https://deepwiki.com/TencentCloudADP/youtu-graphrag><img src=https://img.shields.io/badge/DeepWiki-Tencent-blue.svg></a>
-[![GitHub stars](https://img.shields.io/github/stars/TencentCloudADP/youtu-graphrag?style=social)](https://github.com/TencentCloudADP/youtu-graphrag)
+<a href=https://deepwiki.com/TencentCloudADP/Auto-GraphRAG><img src=https://img.shields.io/badge/DeepWiki-Tencent-blue.svg></a>
+[![GitHub stars](https://img.shields.io/github/stars/TencentCloudADP/Auto-GraphRAG?style=social)](https://github.com/TencentCloudADP/Auto-GraphRAG)
 
 *🚀 重新定义图检索增强推理范式，以 33.6%的 Token 成本节约和 16.62% 的精度提升实现帕累托改进*
 
@@ -17,14 +17,14 @@
 
 ## 📢 最新动态
 *   **[2026年02月]** 🎉 **GraphRAG 企业版** 已在 **[腾讯云智能体开发平台](https://cloud.tencent.com/product/adp)** 上线。
-*   **[2026年01月]** 🎉 **[Youtu-GraphRAG](https://arxiv.org/abs/2508.19855)** 论文已被 **ICLR 2026** 接收！
+*   **[2026年01月]** 🎉 **[Auto-GraphRAG](https://arxiv.org/abs/2508.19855)** 论文已被 **ICLR 2026** 接收！
 
 ## 🎯 项目简介
-**Youtu-GraphRAG**是一个基于图 Schema 实现垂直统一的图增强推理范式，将 GraphRAG 框架精巧地集成为一个以智能体为核心的有机整体。我们实现了通过在图 Schema 上的最小化人为干预下进行跨领域的无缝迁移，为业界应用提供了泛化、准确、可用的下一代 GraphRAG 范式。
+**Auto-GraphRAG**是一个基于图 Schema 实现垂直统一的图增强推理范式，将 GraphRAG 框架精巧地集成为一个以智能体为核心的有机整体。我们实现了通过在图 Schema 上的最小化人为干预下进行跨领域的无缝迁移，为业界应用提供了泛化、准确、可用的下一代 GraphRAG 范式。
 
-<img src="assets/logo.png" alt="Youtu-GrapHRAG Logo" width="90" align="left" style="margin-right:20px;">
+<img src="assets/logo.png" alt="Auto-GraphRAG Logo" width="90" align="left" style="margin-right:20px;">
 
-### 🎨 Youtu-GraphRAG 三大落地场景
+### 🎨 Auto-GraphRAG 三大落地场景
 
 🔗 **多跳推理与总结**：解决需要多步推理的复杂问题<br>
 📚 **知识密集型任务**：处理依赖大量结构化知识的问题<br>
@@ -33,13 +33,13 @@
 ## 🏗️ 框架架构
 
 <div align="center">
-<img src="assets/framework.png" alt="Youtu-GraphRAG 框架架构图" width="95%"/><br>
-Youtu-GraphRAG 框架概览
+<img src="assets/framework.png" alt="Auto-GraphRAG 框架架构图" width="95%"/><br>
+Auto-GraphRAG 框架概览
 </div>
 
 ## 📲 交互式体验界面
 
-您也可以观看[演示视频](https://youtu.be/fVUsgClHqwc) 来了解 Youtu-GraphRAG 的主要特性。
+您也可以观看[演示视频](https://youtu.be/fVUsgClHqwc) 来了解 Auto-GraphRAG 的主要特性。
 <div align="center">
 <img src="assets/graph_demo.png" alt="Graph Construction" width="45.9%"/>
 <img src="assets/retrieval_demo.png" alt="Retrieval" width="49.4%"/>
@@ -48,7 +48,7 @@ Youtu-GraphRAG 框架概览
 <a id="contribution"></a>
 ## 🚀 核心贡献与创新亮点
 
-基于统一的图检索增强生成智能体范式，Youtu-GraphRAG 引入了多项关键创新，这些创新共同构建了一个精密集成的完整框架：
+基于统一的图检索增强生成智能体范式，Auto-GraphRAG 引入了多项关键创新，这些创新共同构建了一个精密集成的完整框架：
 
 <summary><strong>🏗️ 1. Schema 引导的层次化知识树构建</strong></summary>
 
@@ -68,7 +68,7 @@ Youtu-GraphRAG 框架概览
 - 📝 **智能社区摘要**：利用大语言模型增强社区摘要生成，实现更高层次的知识抽象
 
 <div align="center">
-<img src="assets/comm.png" alt="Youtu-GraphRAG Community Detection" width="60%"/>
+<img src="assets/comm.png" alt="Auto-GraphRAG Community Detection" width="60%"/>
 </div>
 
 <summary><strong>🤖 3. 智能迭代检索</strong></summary>
@@ -77,7 +77,7 @@ Youtu-GraphRAG 框架概览
 - 🔄 **迭代反思机制**：通过迭代检索思维链进一步实现深度反思，显著提升推理能力
 
 <div align="center">
-<img src="assets/agent.png" alt="Youtu-GraphRAG Agentic Decomposer" width="50%"/>
+<img src="assets/agent.png" alt="Auto-GraphRAG Agentic Decomposer" width="50%"/>
 </div>
 
 <summary><strong>🧠 4. 领先的落地级构建、索引与推理能力及用户友好体验</strong></summary>
@@ -103,7 +103,7 @@ Youtu-GraphRAG 框架概览
 - 🔄 **完善向后兼容**：确保现有代码在框架升级后仍能正常运行
 
 ## 📊实验表现
-我们在 GraphRAG-Bench、HotpotQA 和 MuSiQue 等六个专业跨领域多语言的基准数据集上进行了广泛实验，充分证明了 Youtu-GraphRAG 的企业级扩展性和泛化性。相比最先进的基线方法，Youtu-GraphRAG 显著推动了帕累托前沿突破，实现了最高<strong>33.6%的 Token 成本节约</strong>和<strong>16.62%的精度提升</strong>。实验结果充分展现了我们框架的卓越泛化性，能够在 Schema 干预最小化的前提下实现跨领域的无缝迁移。
+我们在 GraphRAG-Bench、HotpotQA 和 MuSiQue 等六个专业跨领域多语言的基准数据集上进行了广泛实验，充分证明了 Auto-GraphRAG 的企业级扩展性和泛化性。相比最先进的基线方法，Auto-GraphRAG 显著推动了帕累托前沿突破，实现了最高<strong>33.6%的 Token 成本节约</strong>和<strong>16.62%的精度提升</strong>。实验结果充分展现了我们框架的卓越泛化性，能够在 Schema 干预最小化的前提下实现跨领域的无缝迁移。
 
 <div align="center">
 <img src="assets/performance.png" alt="Cost/acc performance" width="90%"/>
@@ -114,7 +114,7 @@ Youtu-GraphRAG 框架概览
 ## 📁 项目结构
 
 ```
-youtu-graphrag/
+Auto-GraphRAG/
 ├── 📁 config/                     # 配置系统
 │   ├── base_config.yaml           # 主配置文件
 │   ├── config_loader.py           # 配置加载器
@@ -166,10 +166,10 @@ youtu-graphrag/
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. 复制 .env.example 文件格式创建 .env
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # 按照如下格式在 .env 中配置兼容 OpenAI API 格式的 LLM API
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -181,7 +181,7 @@ docker build -t youtu_graphrag:v1 .
 # 4. 启动 docker 容器
 docker run -d -p 8000:8000 youtu_graphrag:v1
 
-# 5. 访问 http://localhost:8000 体验 Youtu-GraphRAG
+# 5. 访问 http://localhost:8000 体验 Auto-GraphRAG
 curl -v http://localhost:8000
 ```
 
@@ -191,10 +191,10 @@ curl -v http://localhost:8000
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. 按照.env.example 文件格式创建 .env
-cd youtu-graphrag && touch .env
+cd Auto-GraphRAG && touch .env
 # 按照如下格式在.env 中配置 OpenAI API 格式的 LLM API
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -210,7 +210,7 @@ source venv/bin/activate  # Linux/macOS
 # 5. 启动服务
 ./start.sh
 
-# 6. 访问 http://localhost:8000 体验 Youtu-GraphRAG
+# 6. 访问 http://localhost:8000 体验 Auto-GraphRAG
 
 curl -v http://localhost:8000 # 检测服务是否正常运行
 ```
@@ -218,7 +218,7 @@ curl -v http://localhost:8000 # 检测服务是否正常运行
 ### 📖 完整使用指南
 详细的安装、配置和使用说明请参考：[**🚀 完整指南（中文）**](FULLGUIDE-CN.md) | [**🚀 Full Guide (English)**](FULLGUIDE.md)
 
-## ⭐ **立即体验 Youtu-GraphRAG，开启智能问答的新篇章！** 🚀
+## ⭐ **立即体验 Auto-GraphRAG，开启智能问答的新篇章！** 🚀
 
 ## 🤝 参与贡献
 
@@ -248,7 +248,7 @@ curl -v http://localhost:8000 # 检测服务是否正常运行
 
 ```bibtex
 @misc{dong2025youtugraphrag,
-      title={Youtu-GraphRAG: Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning}, 
+      title={Auto-GraphRAG: Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning}, 
       author={Junnan Dong and Siyu An and Yifei Yu and Qian-Wen Zhang and Linhao Luo and Xiao Huang and Yunsheng Wu and Di Yin and Xing Sun},
       year={2025},
       eprint={2508.19855},

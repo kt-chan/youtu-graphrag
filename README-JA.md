@@ -1,13 +1,13 @@
 <div align="center">
 
-#  <img src="assets/logo.svg" alt="Youtu-agent Logo" height="26px"> Youtu-GraphRAG：垂直統合型のグラフ強化による複雑推論の新パラダイム
+#  <img src="assets/logo.svg" alt="Youtu-agent Logo" height="26px"> Auto-GraphRAG：垂直統合型のグラフ強化による複雑推論の新パラダイム
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/Paper-Latest-blue.svg)](Youtu-GraphRAG.pdf)
+[![Documentation](https://img.shields.io/badge/Paper-Latest-blue.svg)](Auto-GraphRAG.pdf)
 [![WeChat Community](https://img.shields.io/badge/Community-WeChat-32CD32)](assets/wechat_qr.png)
 [![Discord](https://img.shields.io/badge/Community-Discord-8A2BE2)](https://discord.gg/QjqhkHQVVM)
-<a href=https://deepwiki.com/TencentCloudADP/youtu-graphrag><img src=https://img.shields.io/badge/DeepWiki-Tencent-blue.svg></a>
-[![GitHub stars](https://img.shields.io/github/stars/TencentCloudADP/youtu-graphrag?style=social)](https://github.com/TencentCloudADP/youtu-graphrag)
+<a href=https://deepwiki.com/TencentCloudADP/Auto-GraphRAG><img src=https://img.shields.io/badge/DeepWiki-Tencent-blue.svg></a>
+[![GitHub stars](https://img.shields.io/github/stars/TencentCloudADP/Auto-GraphRAG?style=social)](https://github.com/TencentCloudADP/Auto-GraphRAG)
 
 *🚀 図形検索における推論パラダイムを再定義し、トークンコストを33.6%削減し、精度を16.62%向上させることでパレート改善を実現*
 
@@ -16,11 +16,11 @@
 </div>
 
 ## 🎯 プロジェクト紹介  
-**Youtu-GraphRAG**は、グラフスキーマに基づいて垂直統合された推論パラダイムであり、GraphRAGフレームワークをエージェントを中心とした有機的な全体として巧みに統合しています。グラフスキーマ上での人為的介入を最小限に抑えつつ、異分野間でのシームレスな移行を実現し、業界向けに汎用性が高く、堅牢で実用的な次世代のGraphRAGパラダイムを提供します。
+**Auto-GraphRAG**は、グラフスキーマに基づいて垂直統合された推論パラダイムであり、GraphRAGフレームワークをエージェントを中心とした有機的な全体として巧みに統合しています。グラフスキーマ上での人為的介入を最小限に抑えつつ、異分野間でのシームレスな移行を実現し、業界向けに汎用性が高く、堅牢で実用的な次世代のGraphRAGパラダイムを提供します。
 
-<img src="assets/logo.png" alt="Youtu-GrapHRAG Logo" width="90" align="left" style="margin-right:20px;">
+<img src="assets/logo.png" alt="Auto-GraphRAG Logo" width="90" align="left" style="margin-right:20px;">
 
-### 🎨 Youtu-GraphRAGの三大応用シナリオ  
+### 🎨 Auto-GraphRAGの三大応用シナリオ  
 
 🔗 **多段階推論と要約**：複数の推論ステップが必要な複雑な問題の解決  
 📚 **知識集約型タスク**：大量の構造化された知識に依存する問題の処理  
@@ -29,13 +29,13 @@
 ## 🏗️ フレームワークアーキテクチャ
 
 <div align="center">
-<img src="assets/framework.png" alt="Youtu-GraphRAG フレームワークアーキテクチャ図" width="95%"><br>
-Youtu-GraphRAG フレームワーク概要
+<img src="assets/framework.png" alt="Auto-GraphRAG フレームワークアーキテクチャ図" width="95%"><br>
+Auto-GraphRAG フレームワーク概要
 </div>
 
 ## 📲 インタラクティブなインターフェース
 
-Youtu-GraphRAGの主な特徴については、[デモビデオ](https://youtu.be/fVUsgClHqwc)もご覧いただけます。
+Auto-GraphRAGの主な特徴については、[デモビデオ](https://youtu.be/fVUsgClHqwc)もご覧いただけます。
 <div align="center">
 <img src="assets/graph_demo.png" alt="Graph Construction" width="45.9%"/>
 <img src="assets/retrieval_demo.png" alt="Retrieval" width="49.4%"/>
@@ -44,7 +44,7 @@ Youtu-GraphRAGの主な特徴については、[デモビデオ](https://youtu.b
 <a id="contribution"></a>
 
 ## 🚀 コア貢献とイノベーションのハイライト  
-統一されたグラフ検索に基づく生成エージェントパラダイムに基づき、Youtu-GraphRAGは複数の重要なイノベーションを導入しており、これらのイノベーションが一体となって精密で統合された完全なフレームワークを構築しています。  
+統一されたグラフ検索に基づく生成エージェントパラダイムに基づき、Auto-GraphRAGは複数の重要なイノベーションを導入しており、これらのイノベーションが一体となって精密で統合された完全なフレームワークを構築しています。  
 
 <summary><strong>🏗️ 1. スキーマによる階層的な知識ツリーの構築</strong></summary>
 
@@ -64,7 +64,7 @@ Youtu-GraphRAGの主な特徴については、[デモビデオ](https://youtu.b
 - 📝 **インテリジェントなコミュニティ要約**：大規模言語モデルを活用してコミュニティの要約生成を強化し、より高次元の知識抽象化を実現する。  
 
 <div align="center">  
-<img src="assets/comm.png" alt="Youtu-GraphRAG Community Detection" width="60%"/>  
+<img src="assets/comm.png" alt="Auto-GraphRAG Community Detection" width="60%"/>  
 </div>  
 
 <summary><strong>🤖 3. インテリジェントな反復検索</strong></summary>  
@@ -72,7 +72,7 @@ Youtu-GraphRAGの主な特徴については、[デモビデオ](https://youtu.b
 - 🔄 **反復的な推論メカニズム**：反復的な検索プロセスを通じてさらに深い推論を実現し、推論能力を大幅に向上させる。  
 
 <div align="center">  
-<img src="assets/agent.png" alt="Youtu-GraphRAG Agentic Decomposer" width="50%"/>  
+<img src="assets/agent.png" alt="Auto-GraphRAG Agentic Decomposer" width="50%"/>  
 </div>
 
 <summary><strong>🧠 4. 業界トップクラスの実用レベルでの構築、インデックス作成・推論能力、そしてユーザーフレンドリーな体験</strong></summary>
@@ -98,7 +98,7 @@ Youtu-GraphRAGの主な特徴については、[デモビデオ](https://youtu.b
 - 🔄 **完全な後方互換性**：フレームワークのアップグレード後も既存コードの正常な動作を保証  
 
 ## 📊 実験結果  
-GraphRAG-Bench、HotpotQA、MuSiQueなど6つのベンチマークデータセットを用いた広範な実験により、Youtu-GraphRAGのエンタープライズ向けの拡張性および汎化能力が十分に証明された。最先端の手法と比較して、最大で**33.6%のトークン消費量削減**および**16.62%の精度向上**を実現。実験結果は、スキーマ設定への人為的介入を最小限に抑えつつ異分野間でのシームレスな適用が可能であることを示している。
+GraphRAG-Bench、HotpotQA、MuSiQueなど6つのベンチマークデータセットを用いた広範な実験により、Auto-GraphRAGのエンタープライズ向けの拡張性および汎化能力が十分に証明された。最先端の手法と比較して、最大で**33.6%のトークン消費量削減**および**16.62%の精度向上**を実現。実験結果は、スキーマ設定への人為的介入を最小限に抑えつつ異分野間でのシームレスな適用が可能であることを示している。
 
 - 🔧 **运行时动态调整**：支持在程序执行过程中动态修改配置参数
 - 🌍 **多环境无缝支持**：在图 Schema 最小人为干预的前提下，轻松实现跨领域迁移
@@ -106,7 +106,7 @@ GraphRAG-Bench、HotpotQA、MuSiQueなど6つのベンチマークデータセ�
 
 ## 📊 実験結果
 
-GraphRAG-Bench、HotpotQA、MuSiQueなど6つの専門的かつクロスドメイン対応の多言語ベンチマークデータセットを用いた広範な実験を通じて、Youtu-GraphRAGのエンタープライズレベルでの拡張性および汎化能力が十分に実証されました。最先端のベースライン手法と比較して、Youtu-GraphRAGは顕著な性能向上を達成し、<strong>トークンコストの削減率33.6%</strong>および<strong>精度の向上率16.62%</strong>を実現しました。実験結果は、スキーマへの介入を最小限に抑えつつ異分野間でのシームレスな移行が可能である本フレームワークの優れた汎化能力を如実に示しています。
+GraphRAG-Bench、HotpotQA、MuSiQueなど6つの専門的かつクロスドメイン対応の多言語ベンチマークデータセットを用いた広範な実験を通じて、Auto-GraphRAGのエンタープライズレベルでの拡張性および汎化能力が十分に実証されました。最先端のベースライン手法と比較して、Auto-GraphRAGは顕著な性能向上を達成し、<strong>トークンコストの削減率33.6%</strong>および<strong>精度の向上率16.62%</strong>を実現しました。実験結果は、スキーマへの介入を最小限に抑えつつ異分野間でのシームレスな移行が可能である本フレームワークの優れた汎化能力を如実に示しています。
 
 <div align="center">
 <img src="assets/performance.png" alt="Cost/acc performance" width="90%"/>
@@ -117,7 +117,7 @@ GraphRAG-Bench、HotpotQA、MuSiQueなど6つの専門的かつクロスドメ�
 ## 📁 プロジェクト構造
 
 ```bash
-youtu-graphrag/
+Auto-GraphRAG/
 ├── 📁 config/                     # 設定システム
 │   ├── base_config.yaml           # メイン設定ファイル
 │   ├── config_loader.py           | 設定読み込みモジュール
@@ -165,22 +165,22 @@ youtu-graphrag/
 
 ```bash
 # 1. プロジェクトをクローンする  
-git clone https://github.com/TencentCloudADP/youtu-graphrag  
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG  
 
 # 2. `.env`ファイルを作成する  
-cd youtu-graphrag && cp.env.example.env  
+cd Auto-GraphRAG && cp.env.example.env  
 # `.env`ファイルにOpenAI API形式に準拠したLLM APIを以下の形式で設定する：  
 # LLM_MODEL=deepseek-chat  
 # LLM_BASE_URL=https://api.deepseek.com  
 # LLM_API_KEY=sk-xxxxxx  
 
 # 3. Dockerfileを使用してイメージをビルドする  
-docker build -t youtu-graphrag:v1.  
+docker build -t Auto-GraphRAG:v1.  
 
 # 4. Dockerコンテナを起動する  
-docker run -d -p 8000:8000 youtu-graphrag:v1  
+docker run -d -p 8000:8000 Auto-GraphRAG:v1  
 
-# 5. http://localhost:8000にアクセスしてYoutu-GraphRAGを体験する  
+# 5. http://localhost:8000にアクセスしてAuto-GraphRAGを体験する  
 curl -v http://localhost:8000  
 ```
 
@@ -190,10 +190,10 @@ curl -v http://localhost:8000
 
 ```bash
 # 1. プロジェクトをクローンする
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2..envファイルを作成する
-cd youtu-graphrag && touch.env
+cd Auto-GraphRAG && touch.env
 #.envファイルにOpenAI API形式のLLM APIを以下のように設定する：
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -209,14 +209,14 @@ source venv/bin/activate  # Linux/macOS
 # 5. サービスを起動する
 ./start.sh
 
-# 6. http://localhost:8000にアクセスしてYoutu-GraphRAGを体験する
+# 6. http://localhost:8000にアクセスしてAuto-GraphRAGを体験する
 curl -v http://localhost:8000  # サービスが正常に動作しているかを確認する
 ```
 
 ### 📖 完全な使用ガイド
 インストール、設定、使用方法の詳細については、[**🚀 完全ガイド**](FULLGUIDE.md)をご覧ください。  
 
-## ⭐ **今すぐYoutu-GraphRAGを体験し、インテリジェントなQ&Aの新たな章を始めましょう！** 🚀  
+## ⭐ **今すぐAuto-GraphRAGを体験し、インテリジェントなQ&Aの新たな章を始めましょう！** 🚀  
 
 ## 🤝 貢献をお願いします
 
@@ -244,7 +244,7 @@ curl -v http://localhost:8000  # サービスが正常に動作しているか�
 
 ```bibtex
 @misc{dong2025youtugraphrag,
-      title={Youtu-GraphRAG: Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning}, 
+      title={Auto-GraphRAG: Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning}, 
       author={Junnan Dong and Siyu An and Yifei Yu and Qian-Wen Zhang and Linhao Luo and Xiao Huang and Yunsheng Wu and Di Yin and Xing Sun},
       year={2025},
       eprint={2508.19855},

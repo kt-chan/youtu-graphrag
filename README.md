@@ -1,13 +1,13 @@
 <div align="center">
 
-# <img src="assets/logo.svg" alt="Youtu-agent Logo" height="26px"> Youtu-GraphRAG: <br>Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning
+# <img src="assets/logo.svg" alt="Youtu-agent Logo" height="26px"> Auto-GraphRAG: <br>Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Paper](https://img.shields.io/badge/Paper-Latest-blue.svg)](https://arxiv.org/abs/2508.19855)
 [![WeChat Community](https://img.shields.io/badge/Community-WeChat-32CD32)](assets/wechat_qr.png)
 [![Discord Community](https://img.shields.io/badge/Community-Discord-8A2BE2)](https://discord.gg/QjqhkHQVVM)
-<a href=https://deepwiki.com/TencentCloudADP/youtu-graphrag><img src=https://img.shields.io/badge/DeepWiki-Tencent-blue.svg></a>
-[![GitHub stars](https://img.shields.io/github/stars/TencentCloudADP/youtu-graphrag?style=social)](https://github.com/TencentCloudADP/youtu-graphrag)
+<a href=https://deepwiki.com/TencentCloudADP/Auto-GraphRAG><img src=https://img.shields.io/badge/DeepWiki-Tencent-blue.svg></a>
+[![GitHub stars](https://img.shields.io/github/stars/TencentCloudADP/Auto-GraphRAG?style=social)](https://github.com/TencentCloudADP/Auto-GraphRAG)
 
 *🚀 Revolutionary framework moving Pareto Frontier with 33.6% lower token cost and 16.62% higher accuracy over SOTA baselines*
 
@@ -17,15 +17,15 @@
 
 ## 📢 News
 * **[2026-02]** 🎉 Our Enterprise Edition GraphRAG has been launched on [**Tencent Cloud's ADP Platform**](https://cloud.tencent.com/product/adp).
-* **[2026-01]** 🎉 Our [**Youtu-GraphRAG**](https://arxiv.org/abs/2508.19855) has been accepted by **ICLR 2026**!
+* **[2026-01]** 🎉 Our [**Auto-GraphRAG**](https://arxiv.org/abs/2508.19855) has been accepted by **ICLR 2026**!
 
 ## 🎯 Brief Introduction
-**Youtu-GraphRAG** is a vertically unified agentic paradigm that jointly connects the entire framework as an intricate integration based on graph schema. We allow seamless domain transfer with minimal intervention on the graph schema, providing insights of the next evolutionary GraphRAG paradigm for real-world applications with remarkable adaptability.
+**Auto-GraphRAG** is a vertically unified agentic paradigm that jointly connects the entire framework as an intricate integration based on graph schema. We allow seamless domain transfer with minimal intervention on the graph schema, providing insights of the next evolutionary GraphRAG paradigm for real-world applications with remarkable adaptability.
 
-<img src="assets/logo.png" alt="Youtu-GrapHRAG Logo" width="140" align="left" style="margin-right:20px;">
+<img src="assets/logo.png" alt="Auto-GraphRAG Logo" width="140" align="left" style="margin-right:20px;">
 
 
-### 🎨 When and Why to use Youtu-GraphRAG
+### 🎨 When and Why to use Auto-GraphRAG
 
 🔗 Multi-hop Reasoning/Summarization/Conclusion: Complex questions requiring multi-step reasoning<br>
 📚 Knowledge-Intensive Tasks: Questions dependent on large amounts of structured/private/domain knowledge<br>
@@ -35,8 +35,8 @@
 ## 🏗️ Framework Architecture
 
 <div align="center">
-<img src="assets/framework.png" alt="Youtu-GraphRAG Framework Architecture" width="95%"/><br>
-A sketched overview of our proposed framework Youtu-GraphRAG.
+<img src="assets/framework.png" alt="Auto-GraphRAG Framework Architecture" width="95%"/><br>
+A sketched overview of our proposed framework Auto-GraphRAG.
 </div>
 
 ## 📲 Interactive interface
@@ -58,7 +58,7 @@ This [video](https://youtu.be/fVUsgClHqwc) walks through the main features of th
 <a id="contributions"></a>
 ## 🚀 Contributions and Novelty
 
-Based on our unified agentic paradigm for Graph Retrieval-Augmented Generation (GraphRAG), Youtu-GraphRAG introduces several key innovations that jointly connect the entire framework as an intricate integration:
+Based on our unified agentic paradigm for Graph Retrieval-Augmented Generation (GraphRAG), Auto-GraphRAG introduces several key innovations that jointly connect the entire framework as an intricate integration:
 
 
 <strong>🏗️ 1. Schema-Guided Hierarchical Knowledge Tree Construction</strong>
@@ -80,7 +80,7 @@ Based on our unified agentic paradigm for Graph Retrieval-Augmented Generation (
 - 📝 **Community Summaries**: LLM-enhanced community summarization for higher-level knowledge abstraction
 
 <div align="center">
-<img src="assets/comm.png" alt="Youtu-GraphRAG Community Detection" width="60%"/>
+<img src="assets/comm.png" alt="Auto-GraphRAG Community Detection" width="60%"/>
 </div>
 
 <strong>🤖 3. Agentic Retrieval</strong>
@@ -89,7 +89,7 @@ Based on our unified agentic paradigm for Graph Retrieval-Augmented Generation (
 - 🔄 **Iterative Reflection**: Performs reflection for more advanced reasoning through IRCoT (Iterative Retrieval Chain of Thought)
 
 <div align="center">
-<img src="assets/agent.png" alt="Youtu-GraphRAG Agentic Decomposer" width="50%"/>
+<img src="assets/agent.png" alt="Auto-GraphRAG Agentic Decomposer" width="50%"/>
 </div>
 
 <strong>🧠 4. Advanced Construction and Reasoning Capabilities for real-world deployment</strong>
@@ -117,7 +117,7 @@ Based on our unified agentic paradigm for Graph Retrieval-Augmented Generation (
 
 ## 📊 Performance Comparisons
 
-Extensive experiments across six challenging benchmarks, including GraphRAG-Bench, HotpotQA and MuSiQue, demonstrate the robustness of Youtu-GraphRAG, remarkably moving the Pareto frontier with **33.6% lower token cost** compared to the sota methods and <strong>16.62% higher accuracy</strong> over state-of-the-art baselines. The results indicate our adaptability, allowing seamless domain transfer with minimal intervention on schema.
+Extensive experiments across six challenging benchmarks, including GraphRAG-Bench, HotpotQA and MuSiQue, demonstrate the robustness of Auto-GraphRAG, remarkably moving the Pareto frontier with **33.6% lower token cost** compared to the sota methods and <strong>16.62% higher accuracy</strong> over state-of-the-art baselines. The results indicate our adaptability, allowing seamless domain transfer with minimal intervention on schema.
 
 <div align="center">
 <img src="assets/performance.png" alt="Cost/acc performance" width="90%"/>
@@ -130,7 +130,7 @@ Extensive experiments across six challenging benchmarks, including GraphRAG-Benc
 ## 📁 Project Structure
 
 ```
-youtu-graphrag/
+Auto-GraphRAG/
 ├── 📁 config/                     # Configuration System
 │   ├── base_config.yaml           # Main configuration file
 │   ├── config_loader.py           # Configuration loader
@@ -179,11 +179,11 @@ We provide two approaches to run and experience the demo service. Considering th
 This approach relies on the Docker environment, which could be installed according to [official documentation](https://docs.docker.com/get-started/).
 
 ```bash
-# 1. Clone Youtu-GraphRAG project
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. Clone Auto-GraphRAG project
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. Create .env according to .env.example
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # Config your LLM api in .env as OpenAI API format
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -204,11 +204,11 @@ curl -v http://localhost:8000
 This approach relies on Python 3.10 and the corresponding pip environment, you can install it according to the [official documentation](https://docs.python.org/3.10/using/index.html).
 
 ```bash
-# 1. Clone Youtu-GraphRAG project
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. Clone Auto-GraphRAG project
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. Create .env according to .env.example
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # Config your LLM api in .env as OpenAI API format
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -227,7 +227,7 @@ curl -v http://localhost:8000
 ### 📖 Full Usage Guide
 For advanced config and usage：[**🚀 Full Guide (English)**](FULLGUIDE.md) | [**🚀 完整指南（中文）**](FULLGUIDE-CN.md)
 
-### ⭐ **Start using Youtu-GraphRAG now and experience the intelligent question answering!** 🚀
+### ⭐ **Start using Auto-GraphRAG now and experience the intelligent question answering!** 🚀
 
 
 ## 🤝 Contributing
@@ -259,7 +259,7 @@ We welcome contributions from the community! Here's how you can help:
 
 ```bibtex
 @misc{dong2025youtugraphrag,
-      title={Youtu-GraphRAG: Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning}, 
+      title={Auto-GraphRAG: Vertically Unified Agents for Graph Retrieval-Augmented Complex Reasoning}, 
       author={Junnan Dong and Siyu An and Yifei Yu and Qian-Wen Zhang and Linhao Luo and Xiao Huang and Yunsheng Wu and Di Yin and Xing Sun},
       year={2025},
       eprint={2508.19855},

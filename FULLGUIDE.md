@@ -1,4 +1,4 @@
-# 🚀 Youtu-GraphRAG Full Guide
+# 🚀 Auto-GraphRAG Full Guide
 
 <div align="center">
   <img src="assets/logo.png" alt="Logo" width="100">
@@ -22,11 +22,11 @@
 This approach relies on the Docker environment, which could be installed according to [official documentation](https://docs.docker.com/get-started/).
 
 ```bash
-# 1. Clone Youtu-GraphRAG project
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. Clone Auto-GraphRAG project
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. Create .env according to .env.example
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # Config your LLM api in .env as OpenAI API format
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -75,11 +75,11 @@ curl -v http://localhost:8000
 
 ### Environment Preparation with Docker
 ```bash
-# 1. Clone Youtu-GraphRAG project
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. Clone Auto-GraphRAG project
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. Create .env according to .env.example
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # Config your LLM api in .env as OpenAI API format
 # LLM_MODEL=deepseek-chat
 # LLM_BASE_URL=https://api.deepseek.com
@@ -94,11 +94,11 @@ docker run -d -p 8000:8000 youtu_graphrag:v1
 
 ### Environment Preparation with Conda
 ```bash
-# 1. Clone Youtu-GraphRAG project
-git clone https://github.com/TencentCloudADP/youtu-graphrag
+# 1. Clone Auto-GraphRAG project
+git clone https://github.com/TencentCloudADP/Auto-GraphRAG
 
 # 2. Create .env according to .env.example
-cd youtu-graphrag && cp .env.example .env
+cd Auto-GraphRAG && cp .env.example .env
 # Config your LLM api in .env as OpenAI API format
 LLM_MODEL=deepseek-chat
 LLM_BASE_URL=https://api.deepseek.com
@@ -258,7 +258,7 @@ When processing large-scale datasets (e.g., 7000+ nodes), the process may crash 
 [2025-10-20 17:28:55] INFO enhanced_kt_retriever:2353 - Successfully loaded chunk embeddings from disk cache
 [2025-10-20 17:28:55] INFO faiss_filter:856 - Building FAISS indices and embeddings...
 ./start.sh: line 27: 38579 Segmentation fault: 11  python backend.py
-👋 Youtu-GraphRAG server stopped.
+👋 Auto-GraphRAG server stopped.
 /opt/homebrew/Cellar/python@3.10/3.10.17/Frameworks/Python.framework/Versions/3.10/lib/python3.10/multiprocessing/resource_tracker.py:224: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
 ```
 
@@ -327,7 +327,7 @@ Then start normally:
 
 After applying the fix, rebuild your knowledge graph. The FAISS index construction should complete successfully without crashes.
 
-**Related Issue:** [#123](https://github.com/TencentCloudADP/youtu-graphrag/issues/123)
+**Related Issue:** [#123](https://github.com/TencentCloudADP/Auto-GraphRAG/issues/123)
 
 ---
 
