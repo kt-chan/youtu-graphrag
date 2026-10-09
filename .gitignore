@@ -27,6 +27,7 @@ output/
 retriever/faiss_cache_new/*
 docker/Dockerfile
 site/
+test/proprocessor/logs/*
 
 !schemas/*
 test/proprocessor/logs/llm_client.py.log
