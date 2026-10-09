@@ -272,3 +272,8 @@ AttributeError: 'dict' object has no attribute 'chunk_id'
 2026-10-09 18:09:33 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
 2026-10-09 18:09:50 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
 2026-10-09 18:09:50 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 18:15:03 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 18:15:03 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 18:15:03 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 18:15:21 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 18:15:21 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output

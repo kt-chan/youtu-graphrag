@@ -19,6 +19,7 @@ wheels/
 *.npy
 *.index
 *.json
+*.log
 
 data/
 output/
@@ -28,3 +29,5 @@ docker/Dockerfile
 site/
 
 !schemas/*
+test/proprocessor/logs/llm_client.py.log
+test/proprocessor/logs/preprocess.py.log
