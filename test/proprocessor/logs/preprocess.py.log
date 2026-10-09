@@ -1,0 +1,274 @@
+2026-10-09 09:33:29 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 09:33:29 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 09:34:01 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 09:34:01 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 09:36:28 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 09:36:28 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 09:37:32 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 09:37:32 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 10:47:23 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 10:47:23 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 10:47:40 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 10:47:40 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 10:50:19 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 10:50:19 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 10:50:46 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 10:50:46 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 10:53:15 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 10:53:15 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 10:53:31 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 10:53:31 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 10:54:38 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 10:54:38 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 11:11:36 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 11:11:36 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 11:11:39 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process 2317941550352385028: No turns parsed for 2317941550352385028
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2317941550352385028
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process 2317636400636236106: No turns parsed for 2317636400636236106
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2317636400636236106
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process None: 'call_id'
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 482, in _process_one_call
+    call_id = raw["call_id"]
+              ~~~^^^^^^^^^^^
+KeyError: 'call_id'
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process None: 'call_id'
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 482, in _process_one_call
+    call_id = raw["call_id"]
+              ~~~^^^^^^^^^^^
+KeyError: 'call_id'
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process None: 'call_id'
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 482, in _process_one_call
+    call_id = raw["call_id"]
+              ~~~^^^^^^^^^^^
+KeyError: 'call_id'
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process None: 'call_id'
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 482, in _process_one_call
+    call_id = raw["call_id"]
+              ~~~^^^^^^^^^^^
+KeyError: 'call_id'
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process None: 'call_id'
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 482, in _process_one_call
+    call_id = raw["call_id"]
+              ~~~^^^^^^^^^^^
+KeyError: 'call_id'
+2026-10-09 11:11:39 [ERROR] preprocess.py: Failed to process None: 'call_id'
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 482, in _process_one_call
+    call_id = raw["call_id"]
+              ~~~^^^^^^^^^^^
+KeyError: 'call_id'
+2026-10-09 11:11:39 [INFO] preprocess.py: Done. sessions=0 pairs=0 failures=8
+2026-10-09 11:11:39 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 11:12:15 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 11:12:15 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 11:12:15 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2317941550352385028: No turns parsed for 2317941550352385028
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2317941550352385028
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2317636400636236106: No turns parsed for 2317636400636236106
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2317636400636236106
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2321935320232187350: No turns parsed for 2321935320232187350
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2321935320232187350
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2318767580460372761: No turns parsed for 2318767580460372761
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2318767580460372761
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2320348750405373371: No turns parsed for 2320348750405373371
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2320348750405373371
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2322216280337731862: No turns parsed for 2322216280337731862
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2322216280337731862
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2317742640338591838: No turns parsed for 2317742640338591838
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2317742640338591838
+2026-10-09 11:12:15 [ERROR] preprocess.py: Failed to process 2317749780093664412: No turns parsed for 2317749780093664412
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 536, in _wrap
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 498, in _process_one_call
+    raise ValueError(f"No turns parsed for {call_id}")
+ValueError: No turns parsed for 2317749780093664412
+2026-10-09 11:12:15 [INFO] preprocess.py: Done. sessions=0 pairs=0 failures=8
+2026-10-09 11:12:15 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 11:13:13 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 11:13:13 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 11:13:13 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 11:19:29 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 11:19:29 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 11:19:29 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 11:19:52 [INFO] preprocess.py: Done. sessions=8 pairs=123 failures=0
+2026-10-09 11:19:52 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 12:22:52 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 12:22:52 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 12:22:52 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 12:23:15 [INFO] preprocess.py: Done. sessions=8 pairs=123 failures=0
+2026-10-09 12:23:15 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 12:31:10 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 12:31:10 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 12:31:10 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 12:31:32 [INFO] preprocess.py: Done. sessions=8 pairs=123 failures=0
+2026-10-09 12:31:32 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 12:36:09 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 12:36:09 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 12:36:09 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 12:36:33 [INFO] preprocess.py: Done. sessions=8 pairs=123 failures=0
+2026-10-09 12:36:33 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 14:48:53 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 14:48:53 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 14:48:53 [INFO] preprocess.py: Loaded 8 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 14:49:20 [INFO] preprocess.py: Done. sessions=8 pairs=123 failures=0
+2026-10-09 14:49:20 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 15:48:39 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 15:48:39 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 15:48:39 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 15:49:04 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 15:49:04 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 15:51:35 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 15:51:35 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 15:51:35 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 15:52:00 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 15:52:00 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 15:58:10 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 15:58:10 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 15:58:10 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 15:58:38 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 15:58:38 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 16:16:29 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 16:16:29 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 16:16:29 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 16:16:54 [ERROR] preprocess.py: Failed to process 2317941550352385028: 'dict' object has no attribute 'chunk_id'
+Traceback (most recent call last):
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 509, in _process_task
+    return await self._process_one_call(raw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 480, in _process_one_call
+    pair_chunks = stage6_assign_session_and_topic(pair_chunks, session_chunk)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/demo/app/youtu-graphrag/test/proprocessor/preprocess.py", line 364, in stage6_assign_session_and_topic
+    c.session_chunk_id = session.chunk_id
+                         ^^^^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'chunk_id'
+2026-10-09 16:16:54 [INFO] preprocess.py: Done. sessions=0 pairs=0 failures=1
+2026-10-09 16:16:54 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 16:17:44 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 16:17:44 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 16:17:44 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 16:25:42 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 16:25:42 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 16:25:42 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 16:26:21 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 16:26:21 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 16:34:05 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 16:34:05 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 16:34:05 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 16:34:30 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 16:34:30 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 16:45:50 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 16:45:50 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 16:45:50 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 16:46:00 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 16:46:00 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 16:55:55 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 16:55:55 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 16:55:55 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 16:56:05 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 16:56:05 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 17:38:24 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 17:38:24 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 17:38:24 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 17:38:36 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 17:38:36 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 17:40:39 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 17:40:39 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 17:40:39 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 17:40:56 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 17:40:56 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 17:50:53 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 17:50:53 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 17:50:53 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 17:51:07 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 17:51:07 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 18:00:58 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 18:00:58 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 18:00:58 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 18:01:18 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 18:01:18 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output
+2026-10-09 18:09:33 [INFO] preprocess.py: LLM provider=openai model=GLM-4-FlashX-250414
+2026-10-09 18:09:33 [INFO] preprocess.py: call_concurrency=20 pair_concurrency=200
+2026-10-09 18:09:33 [INFO] preprocess.py: Loaded 1 samples from ./data/debt_collection/debt_collection_corpus.json
+2026-10-09 18:09:50 [INFO] preprocess.py: Done. sessions=1 pairs=54 failures=0
+2026-10-09 18:09:50 [INFO] preprocess.py: Output dir: /home/demo/app/youtu-graphrag/test/proprocessor/offline_output

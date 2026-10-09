@@ -176,10 +176,10 @@ class OutcomeEnum(GraphNodeEnum):
         }
 
 
-class SubflowCategoryEnum(GraphNodeEnum):
-    """子流程分类。从 S3_NeedsDiscovery 进入，必须回挂到某个主阶段。
+class RFDCategoryEnum(GraphNodeEnum):
+    """Reason for Delinquency 子流程分类。从 S3_NeedsDiscovery 进入，必须回挂到某个主阶段。
 
-    与模型 `SubflowCategory` 构成 1:1：枚举成员即该模型实例的 `category_id`。
+    与模型 `RFDCategory` 构成 1:1：枚举成员即该模型实例的 `category_id`。
     """
 
     FLOW_UNEMPLOYMENT = "Flow_Unemployment"
@@ -255,7 +255,7 @@ class MasterStage(BaseModel):
         default=None,
         description="本阶段之后的下一主阶段（主阶段值，非子流程分类）。仅通话到达的最后一个阶段为 null。",
     )
-    branches_to_category: Optional[SubflowCategoryEnum] = Edge(
+    branches_to_category: Optional[RFDCategoryEnum] = Edge(
         label="branchesToCategory",
         default=None,
         description="从 S3_NeedsDiscovery 分支出的子流程分类（子流程值，非主阶段）。仅 S3 允许非空。",
@@ -275,12 +275,12 @@ class MasterStage(BaseModel):
     )
 
 
-class SubflowCategory(BaseModel):
-    """子流程分类节点。父阶段固定为 S3_NeedsDiscovery。"""
+class RFDCategory(BaseModel):
+    """Reason for Delinquency 子流程分类节点。父阶段固定为 S3_NeedsDiscovery。"""
 
     model_config = ConfigDict(graph_id_fields=["category_id"])
 
-    category_id: SubflowCategoryEnum = Field(..., description="子流程分类标识。")
+    category_id: RFDCategoryEnum = Field(..., description="子流程分类标识。")
     parent_master_stage: Literal[MasterStageEnum.S3_NEEDS_DISCOVERY] = Field(
         default=MasterStageEnum.S3_NEEDS_DISCOVERY,
         description="父主阶段，固定为 S3_NeedsDiscovery。",
@@ -299,7 +299,7 @@ class SubStep(BaseModel):
     model_config = ConfigDict(graph_id_fields=["sub_step_id"])
 
     sub_step_id: SubStepEnum = Field(..., description="子步骤标识。")
-    parent_category: SubflowCategoryEnum = Edge(
+    parent_category: RFDCategoryEnum = Edge(
         label="parentCategory",
         required=True,
         description="所属子流程分类（Flow_Unemployment 或 Flow_Other）。",
@@ -368,7 +368,7 @@ class DataExtraction(BaseModel):
     master_stages: list[MasterStage] = Field(
         default_factory=list, description="按时间顺序出现的主阶段列表。"
     )
-    subflow_categories: list[SubflowCategory] = Field(
+    subflow_categories: list[RFDCategory] = Field(
         default_factory=list, description="本次通话进入的子流程分类；未进入则为 []。"
     )
     sub_steps: list[SubStep] = Field(
